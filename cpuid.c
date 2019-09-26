@@ -30,10 +30,10 @@ class CPUID {
   uint32_t regs[4];
 
 public:
-  explicit CPUID(unsigned i) {
+  explicit CPUID(unsigned i, unsigned j) {
     asm volatile
       ("cpuid" : "=a" (regs[0]), "=b" (regs[1]), "=c" (regs[2]), "=d" (regs[3])
-       : "a" (i), "c" (0));
+       : "a" (i), "c" (j));
     // ECX is set to zero for CPUID function 4
   }
 
@@ -89,14 +89,19 @@ void getCpuID()
 
 int main (int argc, char *argv[]) {
     if (argc < 2) {
-        std::cout << "Input CPUID eax value" << std::endl;
+        std::cout << "Usage: ./cpuid eax [ecx]" << std::endl;
         exit(1);
     }
 
     uint32_t eax = atoi(argv[1]);
-    std::cout << "EAX original value: " << eax << std::endl;
+    std::cout << "EAX input value: " << eax << std::endl;
+    uint32_t ecx = 0;
+    if (argc > 2) {
+        ecx = atoi(argv[2]);
+    }
 
-    CPUID cpuID(eax);
+    CPUID cpuID(eax, ecx);
+
     std::cout << "EAX: ";
     decToBinary(cpuID.EAX());
     std::cout << " (" << std::string((const char *)&cpuID.EAX(), 4) << ")" <<std::endl;
