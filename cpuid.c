@@ -45,8 +45,41 @@ public:
 
 uint32_t a[10];
 
-int binaryNum[128];
-void decToBinary(int n)
+bool binaryNum[128];
+
+bool is_little_endian()
+{
+    unsigned int i = 1;  
+    char *c = (char*)&i;  
+    if (*c)  
+        return true;
+    else
+        return false;
+}
+
+void print_hex(uint32_t n)
+{
+   uint8_t* byte = (uint8_t*)(&n);
+
+   if (is_little_endian())
+   {
+       for (int i = 3; i >= 0; i--)
+       {
+           printf("x%x ", *(byte + i));
+       }
+       printf("\n");
+   }
+   else
+   {
+       for (int i = 0; i < 4; i++)
+       {
+           printf("x%x ", *(byte + i));
+       }
+       printf("\n");
+   }
+}
+
+void decToBinary(uint32_t n)
 {
     // counter for binary array
     int i = 0;
@@ -57,18 +90,81 @@ void decToBinary(int n)
         n = n / 2;
         i++;
     }
+    printf("\n");
+}
+
+bool are_msr_insns_enabled()
+{
+    CPUID cpuID(1, 0);
+
+    if (cpuID.EDX() & (1 << 5))
+        return true;
+    return false;
+}
+
+void print_valid_byte(uint32_t reg)
+{
+    if (!(reg & (1 << 31)))
+        print_hex(reg);
+}
+
+void get_cache_tlb_info()
+{
+    CPUID cpuID(2,0);
+    uint8_t* valid_byte;
+    uint32_t reg;
+
+    printf("Valid byte descriptors:\n");
+    
+    /** The byte descriptors are valid if MSB of each register is 0 */
+    printf("EAX:\n");
+    reg = cpuID.EAX();
+    print_valid_byte(reg);
+
+    printf("EBX:\n");
+    reg = cpuID.EBX();
+    print_valid_byte(reg);
+
+    printf("ECX:\n");
+    reg = cpuID.ECX();
+    print_valid_byte(reg);
+
+    printf("EDX:\n");
+    reg = cpuID.EDX();
+    print_valid_byte(reg);
+
+    printf("\nTo check what each byte represents check the description of each byte \nin each register from Table 3.12 on Page 790 of Intel Manual Vol 3\nLS byte of EAX should be ignored\n");
+}
+
+void get_deterministic_cache_params(int index)
+{
+    CPUID cpuID(4, index);
+    std::cout << "EAX: ";
+    print_hex(cpuID.EAX());
+
+    std::cout << "EBX: ";
+    decToBinary(cpuID.EBX());
+
+    std::cout << "ECX: ";
+    decToBinary(cpuID.ECX());
+
+    std::cout << "EDX: ";
+    decToBinary(cpuID.EDX());
 }
 
 void brandString(int eaxValues)
 {
     if (eaxValues == 1) {
-    __asm__("mov $0x80000002 , %eax\n\t");
+        __asm__("mov $0x80000002 , %eax\n\t");
+
     }
     else if (eaxValues == 2) {
         __asm__("mov $0x80000003 , %eax\n\t");
+
     }
     else if (eaxValues == 3) {
         __asm__("mov $0x80000004 , %eax\n\t");
+
     }
     __asm__("cpuid\n\t");
     __asm__("mov %%eax, %0\n\t":"=r" (a[0]));
@@ -87,36 +183,43 @@ void getCpuID()
     printf("\n");
 }
 
-int main (int argc, char *argv[]) {
-    if (argc < 2) {
-        std::cout << "Usage: ./cpuid eax [ecx]" << std::endl;
-        exit(1);
+int main (int argc, char *argv[]) 
+{    
+    if (argc >= 2) 
+    {
+        uint32_t eax = atoi(argv[1]);
+        std::cout << "EAX input value: " << eax << std::endl;
+        uint32_t ecx = 0;
+        if (argc > 2) {
+            ecx = atoi(argv[2]);
+        }
+
+        CPUID cpuID(eax, ecx);
+
+        std::cout << "EAX: ";
+        decToBinary(cpuID.EAX());
+
+        std::cout << "EBX: ";
+        decToBinary(cpuID.EBX());
+
+        std::cout << "ECX: ";
+        decToBinary(cpuID.ECX());
+
+        std::cout << "EDX: ";
+        decToBinary(cpuID.EDX());
     }
+    else
+    {
+//        if (are_msr_insns_enabled())
+//            printf("RDMSR and WRMSR instructions are enabled\n");
+//        else
+//            printf("RDMSR and WRMSR instructions are not enabled\n");
+// 
+//        printf("Cache and TLB info: \n");
+//        get_cache_tlb_info();
 
-    uint32_t eax = atoi(argv[1]);
-    std::cout << "EAX input value: " << eax << std::endl;
-    uint32_t ecx = 0;
-    if (argc > 2) {
-        ecx = atoi(argv[2]);
+        get_deterministic_cache_params(0);
     }
-
-    CPUID cpuID(eax, ecx);
-
-    std::cout << "EAX: ";
-    decToBinary(cpuID.EAX());
-    std::cout << " (" << std::string((const char *)&cpuID.EAX(), 4) << ")" <<std::endl;
-
-    std::cout << "EBX: ";
-    decToBinary(cpuID.EBX());
-    std::cout << " (" << std::string((const char *)&cpuID.EBX(), 4) << ")" <<std::endl;
-
-    std::cout << "ECX: ";
-    decToBinary(cpuID.ECX());
-    std::cout << " (" << std::string((const char *)&cpuID.ECX(), 4) << ")" <<std::endl;
-
-    std::cout << "EDX: ";
-    decToBinary(cpuID.EDX());
-    std::cout << " (" << std::string((const char *)&cpuID.EDX(), 4) << ")" <<std::endl;
 
     return 0;
 }
@@ -124,9 +227,9 @@ int main (int argc, char *argv[]) {
 /***** Some basics of inline assembly
  *
  * see https://ibiblio.org/gferg/ldp/GCC-Inline-Assembly-HOWTO.html
-int res=0;
-int op1=20;
-int op2=10;
+ int res=0;
+ int op1=20;
+ int op2=10;
 
 asm("mov $10, %eax;"); //Basic inline assembly
 asm("mov %eax, %ebx;"); // Extended (asm [volatile] ("(insn, src, dst)" : output operand : input operand: clobbers);
