@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <iostream>
+#include <stdint.h>
 
 /**
  * In this file we explore inline assembly to retrieve architectural information
@@ -183,6 +184,74 @@ void getCpuID()
     printf("\n");
 }
 
+void get_performance_counter_data()
+{
+    CPUID cpuID(10, 0);
+    
+    uint32_t eax = cpuID.EAX();
+    uint32_t ebx = cpuID.EBX();
+
+    printf("Performance counter monitoring data:\n");
+
+    uint8_t* data = (uint8_t*)(&eax);
+    if (is_little_endian())
+    {
+        printf("version ID: %x\n", *data);
+        printf("No. of general purpose performance counters per logical core: %u\n", *(data + 1));
+        printf("Bit width of performance monitoing counter : %u\n", *(data + 2));
+        printf("no. of architectural performance monitoring events: %u\n", *(data + 3));
+
+        data = (uint8_t*)(&ebx);
+    }
+    else
+    {
+        printf("version ID: %x\n", *(data + 3));
+        printf("No. of general purpose performance counters per logical core: %u\n", *(data + 2));
+        printf("Bit width of performance monitoing counter : %u\n", *(data + 1));
+        printf("no. of architectural performance monitoring events: %u\n", *(data));
+
+        data = (uint8_t*)(&ebx);
+        data = data + 3;
+    }
+
+    printf("\n");
+
+    if (*data & (1 << 0))
+        printf("Core cycle event not avilable\n");
+    else
+        printf("Core cycle event avilable\n");
+
+    if (*data & (1 << 1))
+        printf("Instruction retired event not available\n");
+    else
+        printf("Instruction retired event available\n");
+
+    if (*data & (1 << 2))
+        printf("Reference cycle event not available\n");
+    else
+        printf("Reference cycle event available\n");
+
+    if (*data & (1 << 3))
+        printf("Last level cache refrence event available");
+    else
+        printf("Last level cache refrence event available");
+
+    if (*data & (1 << 4))
+        printf("Last level cache miss event not available\n");
+    else
+        printf("Last level cache miss event available\n");
+
+    if (*data & (1 << 5))
+        printf("Branch instruction retired event not available\n");
+    else
+        printf("Branch instruction retired event available\n");
+    
+    if (*data & (1 << 6))
+        printf("Branch mispredict retired event not available\n");
+    else
+        printf("Branch mispredict retired event available\n");
+}
+
 int main (int argc, char *argv[]) 
 {    
     if (argc >= 2) 
@@ -196,16 +265,16 @@ int main (int argc, char *argv[])
 
         CPUID cpuID(eax, ecx);
 
-        std::cout << "EAX: ";
+        printf("EAX: \n");
         decToBinary(cpuID.EAX());
 
-        std::cout << "EBX: ";
+        printf("EBX: \n");
         decToBinary(cpuID.EBX());
 
-        std::cout << "ECX: ";
+        printf("ECX: \n");
         decToBinary(cpuID.ECX());
 
-        std::cout << "EDX: ";
+        printf("EDX: \n");
         decToBinary(cpuID.EDX());
     }
     else
@@ -218,7 +287,9 @@ int main (int argc, char *argv[])
 //        printf("Cache and TLB info: \n");
 //        get_cache_tlb_info();
 
-        get_deterministic_cache_params(0);
+//        get_deterministic_cache_params(0);
+
+        get_performance_counter_data();
     }
 
     return 0;
