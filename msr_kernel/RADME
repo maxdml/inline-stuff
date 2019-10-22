@@ -1,0 +1,2 @@
+This code is basically the kernel module code to execute rdmsr and wrmsr instructions using inline assembly. It has some bug due to which it mostly prints 0s for all the registers read. 
+But it can be used as a reference to write kernel module to run wrmsr and rdmsr instructions, if needed. 
