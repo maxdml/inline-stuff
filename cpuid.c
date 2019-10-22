@@ -26,6 +26,7 @@
 
 
 #include <stdint.h>
+#include "msr.h"
 
 class CPUID {
   uint32_t regs[4];
@@ -107,6 +108,25 @@ void print_valid_byte(uint32_t reg)
 {
     if (!(reg & (1 << 31)))
         print_hex(reg);
+}
+
+bool is_full_width_write_enabled()
+{
+    CPUID cpuID(1, 0);
+
+    decToBinary(cpuID.ECX());
+    /** Check for support for IA32_PERF_CAPABILITIES MSR is provided by processor */
+    if (cpuID.ECX() & (1 << 15))
+    {
+        /** Only now check whether full-width writes are enabled or not */
+        uint32_t eax, edx;
+        msr(345, &eax, &edx);
+
+        if (eax & (1 << 13))
+            printf("full width write capability enabled\n");
+        else
+            printf("full width write capability not enabled\n");
+    }
 }
 
 void get_cache_tlb_info()
@@ -289,7 +309,8 @@ int main (int argc, char *argv[])
 
 //        get_deterministic_cache_params(0);
 
-        get_performance_counter_data();
+//        get_performance_counter_data();
+         is_full_width_write_enabled();
     }
 
     return 0;
