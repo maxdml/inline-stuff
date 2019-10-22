@@ -1,0 +1,2 @@
+This is the part of code from pcm github repo. It is used to execute rdmsr and wrmsr through the means of ioctl calls. This for freeBSD version.
+The code is incomplete and obviously won't build. But this can be used as a reference if we want to use ioctl calls for msr instructions. 
