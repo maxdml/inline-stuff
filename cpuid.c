@@ -116,6 +116,7 @@ bool is_full_width_write_enabled()
 
     decToBinary(cpuID.ECX());
     /** Check for support for IA32_PERF_CAPABILITIES MSR is provided by processor */
+#if 0
     if (cpuID.ECX() & (1 << 15))
     {
         /** Only now check whether full-width writes are enabled or not */
@@ -127,6 +128,7 @@ bool is_full_width_write_enabled()
         else
             printf("full width write capability not enabled\n");
     }
+#endif
 }
 
 void get_cache_tlb_info()
