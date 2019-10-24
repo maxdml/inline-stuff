@@ -91,6 +91,17 @@ void msr::enable_l3_cache_miss()
     msr_write(reg, &event);
 }
 
+void msr::enable_l3_cache_reference()
+{
+	uint64_t reg = 0x187; 		/* IA32_PERFEVTSELx MSRs start address */
+	uint64_t  event_num = 0x002e; 	/* L3 cache miss event number */
+	uint64_t  umask = 0x4f00; 		/* L3 cache miss umask */
+	uint64_t  enable_bits = 0x430000; 	/* Enables user mode, OS mode, counters*/
+	uint64_t  event = enable_bits | umask | event_num;
+
+    msr_write(reg, &event);
+}
+
 void msr::enable_global_counters()
 {
 	uint64_t reg = 0x38f;				/*  IA32_PERF_GLOBAL_CTRL start address */
@@ -109,6 +120,16 @@ void msr::disable_l3_cache_miss()
     msr_write(reg_PMCx, &val);
 }
 
+void msr::disable_l3_cache_reference()
+{
+	uint64_t reg_PEREVTSEL = 0x187;						/* IA32_PERFEVTSELx MSRs start address */
+	uint64_t reg_PMCx = 0x0C2;						/* IA32_PMCx MSRs start address */
+    uint64_t val = 0x00;
+
+    msr_write(reg_PEREVTSEL, &val);
+    msr_write(reg_PMCx, &val);
+}
+
 void msr::disable_global_counters()
 {
 	uint64_t reg = 0x38f;						/*  IA32_PERF_GLOBAL_CTRL start address */		
@@ -120,11 +141,21 @@ void msr::disable_global_counters()
 uint64_t msr::get_l3_cache_misses()
 {
 	uint64_t total_misses;
-	unsigned long eax_low, edx_high;
 	uint64_t reg = 0x0C1;		/* IA32_PMC0 MSR address */
 
     msr_read(reg, &total_misses);
 
 	return total_misses;
+
+}
+
+uint64_t msr::get_l3_cache_references()
+{
+	uint64_t total_references;
+	uint64_t reg = 0x0C2;		/* IA32_PMC1 MSR address */
+
+    msr_read(reg, &total_references);
+
+	return total_references;
 
 }

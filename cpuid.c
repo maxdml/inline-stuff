@@ -282,33 +282,42 @@ void get_performance_counter_data()
         printf("Branch mispredict retired event available\n");
 }
 
-    int aa[10000] = {0}, bb[10000] = {0}, sum[10000];
-uint64_t count_l3_cache_misses(int cpu)
+    int aa[256000] = {0}, bb[256000] = {0}, sum[256000];
+
+void count_l3_cache_misses_references(int cpu, uint64_t* misses, uint64_t* references)
 {
     msr miss(0);
 
-    miss.enable_global_counters();
     miss.enable_l3_cache_miss();
+    miss.enable_l3_cache_reference();
+    miss.enable_global_counters();
     
     uint64_t l3_misses_start, l3_misses_end;
+    uint64_t l3_references_start, l3_references_end;
     
     l3_misses_start = miss.get_l3_cache_misses();
+    l3_references_start = miss.get_l3_cache_references();
 
     /**
       * Code
       */
-    for (int i = 0; i < 10000; i++)
+    for (int i = 0; i < 256000; i++)
     {
         sum[i] = aa[i] + bb[i];
     }
 
     l3_misses_end = miss.get_l3_cache_misses();
-    printf("l3 cache misses - %lu\n", l3_misses_end - l3_misses_start);
+    l3_references_end = miss.get_l3_cache_references();
 
-    miss.disable_l3_cache_miss();
+    *misses = l3_misses_end - l3_misses_start;
+    *references = l3_references_end - l3_references_start;
+    printf("l3 cache misses - %lu\n", *misses);
+    printf("l3 cache references - %lu\n", *references);
+
     miss.disable_global_counters();
+    miss.disable_l3_cache_miss();
+    miss.disable_l3_cache_reference();
 
-    return l3_misses_end - l3_misses_start;
 }
 
 int main (int argc, char *argv[]) 
@@ -351,7 +360,8 @@ int main (int argc, char *argv[])
 //        get_performance_counter_data();
 //         is_full_width_write_enabled();
 
-        count_l3_cache_misses(0);
+        uint64_t misses, references;
+        count_l3_cache_misses_references(0, &misses, &references);
     }
 
     return 0;

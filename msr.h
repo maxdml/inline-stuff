@@ -31,8 +31,11 @@ public:
     bool msr_read(uint64_t reg, uint64_t *data);
     bool msr_write(uint64_t reg, uint64_t *data);
     void enable_l3_cache_miss();
+    void enable_l3_cache_reference();
     void enable_global_counters();
     void disable_l3_cache_miss();
+    void disable_l3_cache_reference();
     void disable_global_counters();
     uint64_t get_l3_cache_misses();
+    uint64_t get_l3_cache_references();
 };
