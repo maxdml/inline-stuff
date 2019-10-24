@@ -15,7 +15,7 @@ msr::msr(uint8_t cpu)
 {
 	char msr_file_name[64];
 	sprintf(msr_file_name, "/dev/cpu/%d/msr", cpu);
-	fd = open(msr_file_name, O_RDONLY);
+	fd = open(msr_file_name, O_RDWR);
 	if (fd < 0) 
     {
 		if (errno == ENXIO) 
@@ -36,7 +36,7 @@ msr::msr(uint8_t cpu)
 
 bool msr::msr_read(uint64_t reg, uint64_t *data)
 {
-	if (pread(fd, &data, sizeof data, reg) != sizeof data) 
+	if (pread(fd, data, sizeof data, reg) != sizeof data) 
     {
 		if (errno == EIO) 
         {
@@ -56,7 +56,7 @@ bool msr::msr_read(uint64_t reg, uint64_t *data)
 
 bool msr::msr_write(uint64_t reg, uint64_t* data)
 {
-    if (pwrite(fd, &data, sizeof data, reg) != sizeof data) 
+    if (pwrite(fd, data, sizeof data, reg) != sizeof data) 
     {
         if (errno == EIO) 
         {
@@ -67,6 +67,7 @@ bool msr::msr_write(uint64_t reg, uint64_t* data)
         } 
         else 
         {
+            printf("Error in writing : %lx\n", reg);
             perror("wrmsr: pwrite");
             return 1;
         }
@@ -78,267 +79,52 @@ msr::~msr()
 {
     close(fd);
 }
-#if 0
-/* Number of decimal digits for a certain number of bits */
-/* (int) ceil(log(2^n)/log(10)) */
-int decdigits[] = {
-	1, 1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4, 4, 5, 5,
-	5, 6, 6, 6, 7, 7, 7, 7, 8, 8, 8, 9, 9, 9, 10, 10,
-	10, 10, 11, 11, 11, 12, 12, 12, 13, 13, 13, 13, 14, 14, 14, 15,
-	15, 15, 16, 16, 16, 16, 17, 17, 17, 18, 18, 18, 19, 19, 19, 19,
-	20
-};
 
-#define mo_hex  0x01
-#define mo_dec  0x02
-#define mo_oct  0x03
-#define mo_raw  0x04
-#define mo_uns  0x05
-#define mo_chx  0x06
-#define mo_mask 0x0f
-#define mo_fill 0x40
-#define mo_c    0x80
-
-const char *program;
-void usage(void)
+void msr::enable_l3_cache_miss()
 {
-	fprintf(stderr,
-		"Usage: %s [options] regno\n"
-		"  --help         -h  Print this help\n"
-		"  --version      -V  Print current version\n"
-		"  --hexadecimal  -x  Hexadecimal output (lower case)\n"
-		"  --capital-hex  -X  Hexadecimal output (upper case)\n"
-		"  --decimal      -d  Signed decimal output\n"
-		"  --unsigned     -u  Unsigned decimal output\n"
-		"  --octal        -o  Octal output\n"
-		"  --c-language   -c  Format output as a C language constant\n"
-		"  --zero-pad     -0  Output leading zeroes\n"
-		"  --raw          -r  Raw binary output\n"
-		"  --processor #  -p  Select processor number (default 0)\n"
-		"  --bitfield h:l -f  Output bits [h:l] only\n", program);
+	uint64_t reg = 0x186; 		/* IA32_PERFEVTSELx MSRs start address */
+	uint64_t  event_num = 0x002e; 	/* L3 cache miss event number */
+	uint64_t  umask = 0x4100; 		/* L3 cache miss umask */
+	uint64_t  enable_bits = 0x430000; 	/* Enables user mode, OS mode, counters*/
+	uint64_t  event = enable_bits | umask | event_num;
+
+    msr_write(reg, &event);
 }
 
-int main(int argc, char *argv[])
+void msr::enable_global_counters()
 {
-	uint32_t reg;
-	uint64_t data;
-	int c, fd;
-	int mode = mo_hex;
-	int cpu = 0;
-	unsigned int highbit = 63, lowbit = 0, bits;
-	unsigned long arg;
-	char *endarg;
-	char *pat;
-	int width;
-	char msr_file_name[64];
+	uint64_t reg = 0x38f;				/*  IA32_PERF_GLOBAL_CTRL start address */
+	uint64_t enable_bits = 0x0f;	/*  IA32_PERF_GLOBAL_CTRL to enable the 4 programmable counters */
 
-	program = argv[0];
-
-	while ((c =
-		getopt_long(argc, argv, short_options, long_options,
-			    NULL)) != -1) {
-		switch (c) {
-		case 'h':
-			usage();
-			exit(0);
-		case 'V':
-			fprintf(stderr, "%s: version %s\n", program,
-				VERSION_STRING);
-			exit(0);
-		case 'x':
-			mode = (mode & ~mo_mask) | mo_hex;
-			break;
-		case 'X':
-			mode = (mode & ~mo_mask) | mo_chx;
-			break;
-		case 'o':
-			mode = (mode & ~mo_mask) | mo_oct;
-			break;
-		case 'd':
-			mode = (mode & ~mo_mask) | mo_dec;
-			break;
-		case 'r':
-			mode = (mode & ~mo_mask) | mo_raw;
-			break;
-		case 'u':
-			mode = (mode & ~mo_mask) | mo_uns;
-			break;
-		case 'c':
-			mode |= mo_c;
-			break;
-		case '0':
-			mode |= mo_fill;
-			break;
-		case 'p':
-			arg = strtoul(optarg, &endarg, 0);
-			if (*endarg || arg > 255) {
-				usage();
-				exit(127);
-			}
-			cpu = (int)arg;
-			break;
-		case 'f':
-			if (sscanf(optarg, "%u:%u", &highbit, &lowbit) != 2 ||
-			    highbit > 63 || lowbit > highbit) {
-				usage();
-				exit(127);
-			}
-			break;
-		default:
-			usage();
-			exit(127);
-		}
-	}
-
-	if (optind != argc - 1) {
-		/* Should have exactly one argument */
-		usage();
-		exit(127);
-	}
-
-	reg = strtoul(argv[optind], NULL, 0);
-
-	sprintf(msr_file_name, "/dev/cpu/%d/msr", cpu);
-	fd = open(msr_file_name, O_RDONLY);
-	if (fd < 0) {
-		if (errno == ENXIO) {
-			fprintf(stderr, "rdmsr: No CPU %d\n", cpu);
-			exit(2);
-		} else if (errno == EIO) {
-			fprintf(stderr, "rdmsr: CPU %d doesn't support MSRs\n",
-				cpu);
-			exit(3);
-		} else {
-			perror("rdmsr: open");
-			exit(127);
-		}
-	}
-
-	if (pread(fd, &data, sizeof data, reg) != sizeof data) {
-		if (errno == EIO) {
-			fprintf(stderr, "rdmsr: CPU %d cannot read "
-				"MSR 0x%08"PRIx32"\n",
-				cpu, reg);
-			exit(4);
-		} else {
-			perror("rdmsr: pread");
-			exit(127);
-		}
-	}
-
-	close(fd);
-
-	bits = highbit - lowbit + 1;
-	if (bits < 64) {
-		/* Show only part of register */
-		data >>= lowbit;
-		data &= (1ULL << bits) - 1;
-	}
-
-	pat = NULL;
-
-	width = 1;		/* Default */
-	switch (mode) {
-	case mo_hex:
-		pat = "%*llx\n";
-		break;
-	case mo_chx:
-		pat = "%*llX\n";
-		break;
-	case mo_dec:
-	case mo_dec | mo_c:
-	case mo_dec | mo_fill | mo_c:
-		/* Make sure we get sign correct */
-		if (data & (1ULL << (bits - 1))) {
-			data &= ~(1ULL << (bits - 1));
-			data = -data;
-		}
-		pat = "%*lld\n";
-		break;
-	case mo_uns:
-		pat = "%*llu\n";
-		break;
-	case mo_oct:
-		pat = "%*llo\n";
-		break;
-	case mo_hex | mo_c:
-		pat = "0x%*llx\n";
-		break;
-	case mo_chx | mo_c:
-		pat = "0x%*llX\n";
-		break;
-	case mo_oct | mo_c:
-		pat = "0%*llo\n";
-		break;
-	case mo_uns | mo_c:
-	case mo_uns | mo_fill | mo_c:
-		pat = "%*lluU\n";
-		break;
-	case mo_hex | mo_fill:
-		pat = "%0*llx\n";
-		width = (bits + 3) / 4;
-		break;
-	case mo_chx | mo_fill:
-		pat = "%0*llX\n";
-		width = (bits + 3) / 4;
-		break;
-	case mo_dec | mo_fill:
-		/* Make sure we get sign correct */
-		if (data & (1ULL << (bits - 1))) {
-			data &= ~(1ULL << (bits - 1));
-			data = -data;
-		}
-		pat = "%0*lld\n";
-		width = decdigits[bits - 1] + 1;
-		break;
-	case mo_uns | mo_fill:
-		pat = "%0*llu\n";
-		width = decdigits[bits];
-		break;
-	case mo_oct | mo_fill:
-		pat = "%0*llo\n";
-		width = (bits + 2) / 3;
-		break;
-	case mo_hex | mo_fill | mo_c:
-		pat = "0x%0*llx\n";
-		width = (bits + 3) / 4;
-		break;
-	case mo_chx | mo_fill | mo_c:
-		pat = "0x%0*llX\n";
-		width = (bits + 3) / 4;
-		break;
-	case mo_oct | mo_fill | mo_c:
-		pat = "0%0*llo\n";
-		width = (bits + 2) / 3;
-		break;
-	case mo_raw:
-	case mo_raw | mo_fill:
-		fwrite(&data, sizeof data, 1, stdout);
-		break;
-	case mo_raw | mo_c:
-	case mo_raw | mo_fill | mo_c:
-		{
-			unsigned char *p = (unsigned char *)&data;
-			int i;
-			for (i = 0; i < sizeof data; i++) {
-				printf("%s0x%02x", i ? "," : "{",
-				       (unsigned int)(*p++));
-			}
-			printf("}\n");
-		}
-		break;
-	default:
-		fprintf(stderr, "%s: Impossible case, line %d\n", program,
-			__LINE__);
-		exit(127);
-	}
-
-	if (width < 1)
-		width = 1;
-
-	if (pat)
-		printf(pat, width, data);
-
-	exit(0);
+    msr_write(reg, &enable_bits);
 }
-#endif
+
+void msr::disable_l3_cache_miss()
+{
+	uint64_t reg_PEREVTSEL = 0x186;						/* IA32_PERFEVTSELx MSRs start address */
+	uint64_t reg_PMCx = 0x0C1;						/* IA32_PMCx MSRs start address */
+    uint64_t val = 0x00;
+
+    msr_write(reg_PEREVTSEL, &val);
+    msr_write(reg_PMCx, &val);
+}
+
+void msr::disable_global_counters()
+{
+	uint64_t reg = 0x38f;						/*  IA32_PERF_GLOBAL_CTRL start address */		
+    uint64_t val = 0x00;
+
+    msr_write(reg, &val);
+}
+
+uint64_t msr::get_l3_cache_misses()
+{
+	uint64_t total_misses;
+	unsigned long eax_low, edx_high;
+	uint64_t reg = 0x0C1;		/* IA32_PMC0 MSR address */
+
+    msr_read(reg, &total_misses);
+
+	return total_misses;
+
+}

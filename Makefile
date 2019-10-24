@@ -3,7 +3,7 @@ CPPFLAGS=-ggdb
 
 TARGETS = cpuid
 
-cpuid: cpuid.c
+cpuid: cpuid.c msr.c
 	$(CXX) -o $@ $^ $(CPPFLAGS)
 
 .PHONY: clean

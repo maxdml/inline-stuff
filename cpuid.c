@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <iostream>
 #include <stdint.h>
+#include <unistd.h>
 
 /**
  * In this file we explore inline assembly to retrieve architectural information
@@ -114,21 +115,28 @@ bool is_full_width_write_enabled()
 {
     CPUID cpuID(1, 0);
 
-    decToBinary(cpuID.ECX());
+    //decToBinary(cpuID.ECX());
+    
     /** Check for support for IA32_PERF_CAPABILITIES MSR is provided by processor */
-#if 0
+    msr msr_1(0);
+
     if (cpuID.ECX() & (1 << 15))
     {
         /** Only now check whether full-width writes are enabled or not */
-        uint32_t eax, edx;
-        msr(345, &eax, &edx);
+        uint64_t perf_capability;
+        bool ret = msr_1.msr_read(837, &perf_capability);
+        printf("msr reg value: %lx\n", perf_capability);
 
-        if (eax & (1 << 13))
-            printf("full width write capability enabled\n");
-        else
-            printf("full width write capability not enabled\n");
+
+        if (ret == 0)
+        {
+            /** Enabled if bit 13 is 1 */
+            if (perf_capability & (1 << 13))
+                printf("full width write capability enabled\n");
+            else
+                printf("full width write capability not enabled\n");
+        }
     }
-#endif
 }
 
 void get_cache_tlb_info()
@@ -274,6 +282,35 @@ void get_performance_counter_data()
         printf("Branch mispredict retired event available\n");
 }
 
+    int aa[10000] = {0}, bb[10000] = {0}, sum[10000];
+uint64_t count_l3_cache_misses(int cpu)
+{
+    msr miss(0);
+
+    miss.enable_global_counters();
+    miss.enable_l3_cache_miss();
+    
+    uint64_t l3_misses_start, l3_misses_end;
+    
+    l3_misses_start = miss.get_l3_cache_misses();
+
+    /**
+      * Code
+      */
+    for (int i = 0; i < 10000; i++)
+    {
+        sum[i] = aa[i] + bb[i];
+    }
+
+    l3_misses_end = miss.get_l3_cache_misses();
+    printf("l3 cache misses - %lu\n", l3_misses_end - l3_misses_start);
+
+    miss.disable_l3_cache_miss();
+    miss.disable_global_counters();
+
+    return l3_misses_end - l3_misses_start;
+}
+
 int main (int argc, char *argv[]) 
 {    
     if (argc >= 2) 
@@ -308,11 +345,13 @@ int main (int argc, char *argv[])
 // 
 //        printf("Cache and TLB info: \n");
 //        get_cache_tlb_info();
-
+//
 //        get_deterministic_cache_params(0);
-
+//
 //        get_performance_counter_data();
-         is_full_width_write_enabled();
+//         is_full_width_write_enabled();
+
+        count_l3_cache_misses(0);
     }
 
     return 0;

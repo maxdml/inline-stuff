@@ -198,6 +198,8 @@ int main(int argc, char *argv[])
 
 	close(fd);
 
+    printf("reg data: %lx\n", data);
+
 	bits = highbit - lowbit + 1;
 	if (bits < 64) {
 		/* Show only part of register */
