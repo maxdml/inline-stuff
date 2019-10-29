@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <stdint.h>
-#include <iostream>
 
 /**  Global counters */
 typedef enum
