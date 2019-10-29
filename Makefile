@@ -8,9 +8,8 @@ CXXFLAGS += -lasan -fsanitize=address
 LIB = -lpthread -fsanitize=address
 LIB += -fsanitize=address
 
-COMMON_OBJS = msr.o
-EXE_OBJS = $(EXEC:.x=.o)
-OBJS = $(COMMON_OBJS) $(EXEC_OBJS)
+COMMON_OBJS = msr.o benchmarks.o
+OBJS = $(COMMON_OBJS)
 
 .PRECIOUS: $(OBJS)
 
