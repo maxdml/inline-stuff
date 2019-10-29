@@ -7,35 +7,38 @@
 #include "benchmarks.hh"
 
 void cache_work(struct ThreadArgs &args) {
+    args.iterations = 5;
     uint64_t store_start[N_CUSTOM_CTR + N_FIXED_CTR];
     uint64_t store_end[N_CUSTOM_CTR + N_FIXED_CTR];
     uint32_t i, j, k;
+    uint32_t nrows = 50;
+    uint32_t ncols = 10;
+    uint64_t a[nrows][ncols];
     /* Init matrix */
-    for (i = 0; i < 100; ++i) {
-        for (j = 0; j < 100; ++j) {
-            args.a[i][j] = xorshift128plus(mat_rng) >> 11;
-            __asm__ volatile("clflush (%0)" : : "r" ((volatile void *)& args.a[i][j]) : "memory");
+    for (i = 0; i < nrows; ++i) {
+        for (j = 0; j < ncols; ++j) {
+            a[i][j] = xorshift128plus(mat_rng) >> 11;
+            __asm__ volatile("clflush (%0)" : : "r" ((volatile void *)& a[i][j]) : "memory");
         }
     }
-
     /* Access it */
     for (k = 0; k < args.iterations; ++k) {
         read_values(args.cpu_msr, store_start);
-        for (j = 0; j < 100; ++j) {
-            for (i = 0; i < 100; ++i) {
-                args.a[i][j] = 2 * args.a[i][j];
-            }
-        }
     /*
-        for (i = 0; i < 5000; ++i) {
-            for (j = 0; j < 100; ++j) {
-                args.a[i][j] = 2 * args.a[i][j];
+        for (j = 0; j < nrows; ++j) {
+            for (i = 0; i < ncols; ++i) {
+                a[i][j] = 2 * a[i][j];
             }
         }
     */
+        for (i = 0; i < ncols; ++i) {
+            for (j = 0; j < nrows; ++j) {
+                a[i][j] = 2 * a[i][j];
+            }
+        }
         read_values(args.cpu_msr, store_end);
-        for (int i = 0; counter_tbl[i].name; ++i) {
-            args.values(i, args.counts) = store_end[i] - store_start[i];
+        for (int c = 0; counter_tbl[c].name; ++c) {
+            args.values(c, args.counts) = store_end[c] - store_start[c];
         }
         args.counts++;
     }
@@ -53,8 +56,8 @@ void cache_work(struct ThreadArgs &args) {
 // 2.1M /media/memfs/wiki/fr/z/x/8/Utilisateur~ZX81-bot_Journaux_2007042701_125f.html
 
 void file_work(struct ThreadArgs args) {
-    args.f1 = "/media/memfs/wiki/fr/h/e/x/Utilisateur~Hexasoft_Statistiques_Geckonidé_41ae.html";
-    args.f2 = "/media/memfs/wiki/fr/c/l/n/Utilisateur~Cln-id_monobook.js_9900.html";
+    std::string f1 = "/media/memfs/wiki/fr/h/e/x/Utilisateur~Hexasoft_Statistiques_Geckonidé_41ae.html";
+    std::string f2 = "/media/memfs/wiki/fr/c/l/n/Utilisateur~Cln-id_monobook.js_9900.html";
     //std::string f1 = "/media/memfs/wiki/fr/b/u/l/Wikipédia~Bulletin_des_administrateurs_Février_2007_8e0a.html";
     //std::string f2 = "/media/memfs/wiki/fr/s/o/b/Utilisateur~Sobreira_Carnivora_a3cd.html";
     //std::string f1 = "/media/memfs/wiki/fr/i/t/a/Projet~Italie_Catégorisation_f5a3.html";
@@ -63,9 +66,9 @@ void file_work(struct ThreadArgs args) {
     for (uint32_t i = 0; i < args.iterations; ++i) {
         FILE *file = NULL;
         if (i%2 == 0) {
-            file = fopen(args.f1.c_str(), "rb");
+            file = fopen(f1.c_str(), "rb");
         } else {
-            file = fopen(args.f2.c_str(), "rb");
+            file = fopen(f2.c_str(), "rb");
         }
         if (fseek(file, 0, SEEK_END) == -1) {
             std::cout << "fseek error: " << strerror(errno) << std::endl;

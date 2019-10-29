@@ -63,19 +63,12 @@ class MultiArray {
 };
 
 struct ThreadArgs {
-    uint32_t iterations;
-
-    /* matrix & array benchmarks */
-    uint32_t a[100][100]; // Around 4B*10k = 40KB
-
-    /* File benchmarks */
-    std::string f1;
-    std::string f2;
+    uint32_t iterations = 0;
 
     /* Profiling */
     MultiArray<uint64_t, N_CUSTOM_CTR + N_FIXED_CTR, MAX_PTS> values;
-    uint64_t counts;
-    MsrHandle *cpu_msr;
+    uint64_t counts = 0;
+    MsrHandle *cpu_msr = nullptr;
 };
 
 /*********************

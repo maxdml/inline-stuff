@@ -4,9 +4,9 @@ all: $(EXEC)
 
 CXXFLAGS += -Wall -ggdb -O0
 CXXFLAGS += -std=c++17
-CXXFLAGS += -lasan -fsanitize=address
-LIB = -lpthread -fsanitize=address
-LIB += -fsanitize=address
+#CXXFLAGS += -lasan -fsanitize=address
+LIB = -lpthread
+#LIB += -fsanitize=address
 
 COMMON_OBJS = msr.o benchmarks.o
 OBJS = $(COMMON_OBJS)
