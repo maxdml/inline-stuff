@@ -146,7 +146,7 @@ void get_cache_tlb_info()
     uint32_t reg;
 
     printf("Valid byte descriptors:\n");
-    
+
     /** The byte descriptors are valid if MSB of each register is 0 */
     printf("EAX:\n");
     reg = cpuID.EAX();
@@ -217,9 +217,10 @@ void getCpuID()
 void get_performance_counter_data()
 {
     CPUID cpuID(10, 0);
-    
+
     uint32_t eax = cpuID.EAX();
     uint32_t ebx = cpuID.EBX();
+    uint32_t edx = cpuID.EDX();
 
     printf("Performance counter monitoring data:\n");
 
@@ -230,6 +231,11 @@ void get_performance_counter_data()
         printf("No. of general purpose performance counters per logical core: %u\n", *(data + 1));
         printf("Bit width of performance monitoing counter : %u\n", *(data + 2));
         printf("no. of architectural performance monitoring events: %u\n", *(data + 3));
+        if (*data > 1) {
+            printf("no. of fixed performance counters per thread: %u\n", edx & 0xF);
+            //XXX
+            printf("Bit width of fixed-function performance counters: %u\n", (edx >> 4) & 0xFF);
+        }
 
         data = (uint8_t*)(&ebx);
     }
@@ -239,6 +245,7 @@ void get_performance_counter_data()
         printf("No. of general purpose performance counters per logical core: %u\n", *(data + 2));
         printf("Bit width of performance monitoing counter : %u\n", *(data + 1));
         printf("no. of architectural performance monitoring events: %u\n", *(data));
+        printf("no. of fixed performance counters per thread: %u\n", (edx >> 28) & 0xF);
 
         data = (uint8_t*)(&ebx);
         data = data + 3;
@@ -275,7 +282,7 @@ void get_performance_counter_data()
         printf("Branch instruction retired event not available\n");
     else
         printf("Branch instruction retired event available\n");
-    
+
     if (*data & (1 << 6))
         printf("Branch mispredict retired event not available\n");
     else
@@ -291,10 +298,10 @@ void count_l3_cache_misses_references(int cpu, uint64_t* misses, uint64_t* refer
     miss.enable_l3_cache_miss();
     miss.enable_l3_cache_reference();
     miss.enable_global_counters();
-    
+
     uint64_t l3_misses_start, l3_misses_end;
     uint64_t l3_references_start, l3_references_end;
-    
+
     l3_misses_start = miss.get_l3_cache_misses();
     l3_references_start = miss.get_l3_cache_references();
 
@@ -320,9 +327,13 @@ void count_l3_cache_misses_references(int cpu, uint64_t* misses, uint64_t* refer
 
 }
 
-int main (int argc, char *argv[]) 
-{    
-    if (argc >= 2) 
+/* TODO: check IA32_MISC_ENABLE (0x1A0)
+ * bit 7: Performance Monitoring Available (R) 0/1 disabled/enabled
+ * bit 12: Processor Event Based Sampling (PEBS) Unavailable (RO)
+ */
+int main (int argc, char *argv[])
+{
+    if (argc >= 2)
     {
         uint32_t eax = atoi(argv[1]);
         std::cout << "EAX input value: " << eax << std::endl;
@@ -347,21 +358,24 @@ int main (int argc, char *argv[])
     }
     else
     {
-//        if (are_msr_insns_enabled())
-//            printf("RDMSR and WRMSR instructions are enabled\n");
-//        else
-//            printf("RDMSR and WRMSR instructions are not enabled\n");
-// 
-//        printf("Cache and TLB info: \n");
-//        get_cache_tlb_info();
-//
-//        get_deterministic_cache_params(0);
-//
-//        get_performance_counter_data();
-//         is_full_width_write_enabled();
+        getCpuID();
+        if (are_msr_insns_enabled())
+            printf("RDMSR and WRMSR instructions are enabled\n");
+        else
+            printf("RDMSR and WRMSR instructions are not enabled\n");
 
+        printf("Cache and TLB info: \n");
+        get_cache_tlb_info();
+
+        get_deterministic_cache_params(0);
+
+        get_performance_counter_data();
+        is_full_width_write_enabled();
+
+        /*
         uint64_t misses, references;
         count_l3_cache_misses_references(0, &misses, &references);
+        */
     }
 
     return 0;
