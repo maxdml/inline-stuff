@@ -3,10 +3,38 @@
 #include <errno.h>
 #include <pthread.h>
 #include <iostream>
+#include <stdint.h>
 
 #include "benchmarks.hh"
 
-void cache_work(struct ThreadArgs &args) {
+void run_test_benchmark(MsrHandle* cpu_msr)
+{
+    if (cpu_msr == NULL)
+    {
+        printf("handle is NULL\n");
+        return;
+    }
+    uint8_t arr[64] = {0};
+    uint8_t c;
+    uint64_t start_ref, end_ref, start_miss, end_miss; 
+
+    cpu_msr->read(ARCH_LLC_REFERENCE_EVTNR, &start_ref); 
+    cpu_msr->read(ARCH_LLC_MISS_EVTNR, &start_miss); 
+
+    for(int i = 0; i < 64; i++)
+    {
+        c = arr[i];
+    }
+    
+    cpu_msr->read(ARCH_LLC_REFERENCE_EVTNR, &end_ref); 
+    cpu_msr->read(ARCH_LLC_MISS_EVTNR, &end_miss); 
+
+    printf("total references: %lx\n", end_ref - start_ref);
+    printf("total misses: %lx\n", end_miss - start_miss);
+}
+
+void cache_work(struct ThreadArgs &args) 
+{
     args.iterations = 5;
     uint64_t store_start[N_CUSTOM_CTR + N_FIXED_CTR];
     uint64_t store_end[N_CUSTOM_CTR + N_FIXED_CTR];
@@ -94,3 +122,4 @@ void file_work(struct ThreadArgs args) {
     }
     pthread_exit(NULL);
 }
+

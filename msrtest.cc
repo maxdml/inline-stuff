@@ -19,7 +19,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 #include "msr.hh"
 #include "types.h"
 
-#define NUM_CORES 10
+#define NUM_CORES 8
 
 int main() {
     uint32_t i = 0;

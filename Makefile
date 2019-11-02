@@ -1,4 +1,4 @@
-EXEC = main.x msrtest.x cpuid.x
+EXEC = main.x  cpuid.x msr.x
 
 all: $(EXEC)
 
@@ -8,7 +8,7 @@ CXXFLAGS += -std=c++17
 LIB = -lpthread
 #LIB += -fsanitize=address
 
-COMMON_OBJS = msr.o benchmarks.o
+COMMON_OBJS = main.o msr.o benchmarks.o
 OBJS = $(COMMON_OBJS)
 
 .PRECIOUS: $(OBJS)
@@ -17,7 +17,7 @@ OBJS = $(COMMON_OBJS)
 	$(CXX) -o $@ $^ $(LIB)
 
 cpuid.x: cpuid.c msr-old.c
-	$(CXX) -o $@.x $^
+	$(CXX) -o $@ $^
 
 .PHONY: clean
 
