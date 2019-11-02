@@ -27,7 +27,8 @@
 
 
 #include <stdint.h>
-#include "msr.h"
+#include "msr-old.h"
+#include "types.h"
 
 class CPUID {
   uint32_t regs[4];
@@ -167,20 +168,45 @@ void get_cache_tlb_info()
     printf("\nTo check what each byte represents check the description of each byte \nin each register from Table 3.12 on Page 790 of Intel Manual Vol 3\nLS byte of EAX should be ignored\n");
 }
 
-void get_deterministic_cache_params(int index)
+bool get_cache_params_index(int index)
 {
     CPUID cpuID(4, index);
-    std::cout << "EAX: ";
-    print_hex(cpuID.EAX());
 
-    std::cout << "EBX: ";
-    decToBinary(cpuID.EBX());
+    cache_params cache;
+    cache.eax.eax_value = cpuID.EAX();
+    cache.ebx.ebx_value = cpuID.EBX();
+    cache.ecx.ecx_value = cpuID.ECX();
+    cache.edx.edx_value = cpuID.EDX();
 
-    std::cout << "ECX: ";
-    decToBinary(cpuID.ECX());
+    if (cache.eax.eax_bit_values.cache_type == 0)
+        return false;
+    
+    printf("cache level: %d\n", cache.eax.eax_bit_values.level);
+    if (cache.eax.eax_bit_values.cache_type == 1)
+        printf("Data cache\n");
+    else if (cache.eax.eax_bit_values.cache_type == 2)
+        printf("insn cache\n");
+    else if (cache.eax.eax_bit_values.cache_type == 3)
+        printf("unified cache\n");
 
-    std::cout << "EDX: ";
-    decToBinary(cpuID.EDX());
+    printf("fully associative: %d\n", cache.eax.eax_bit_values.fully_associative);
+    printf("cache line size: %d\n", cache.ebx.ebx_bit_values.cache_line_size + 1);
+    printf("ways of associativity: %d\n", cache.ebx.ebx_bit_values.ways + 1);
+    printf("no. of sets: %d\n", cache.ecx.ecx_bit_values.num_sets + 1);
+    
+    if (cache.edx.edx_bit_values.inclusive)
+        printf("inclusive cache\n");
+    else
+        printf("not inclusive cache\n");
+
+    printf("=============================================\n\n");
+    return true;
+}
+
+void get_cache_params()
+{
+    int index = 0;
+    while(get_cache_params_index(index++));
 }
 
 void brandString(int eaxValues)
@@ -358,19 +384,20 @@ int main (int argc, char *argv[])
     }
     else
     {
-        getCpuID();
-        if (are_msr_insns_enabled())
-            printf("RDMSR and WRMSR instructions are enabled\n");
-        else
-            printf("RDMSR and WRMSR instructions are not enabled\n");
+        //getCpuID();
+        //if (are_msr_insns_enabled())
+        //    printf("RDMSR and WRMSR instructions are enabled\n");
+        //else
+        //    printf("RDMSR and WRMSR instructions are not enabled\n");
 
-        printf("Cache and TLB info: \n");
-        get_cache_tlb_info();
+        //printf("Cache and TLB info: \n");
+        //get_cache_tlb_info();
 
-        get_deterministic_cache_params(0);
+        printf("CACHE INFO:\n\n");
+        get_cache_params();
 
-        get_performance_counter_data();
-        is_full_width_write_enabled();
+        //get_performance_counter_data();
+        //is_full_width_write_enabled();
 
         /*
         uint64_t misses, references;

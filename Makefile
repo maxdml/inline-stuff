@@ -1,4 +1,4 @@
-EXEC = main.x msrtest.x
+EXEC = main.x msrtest.x cpuid.x
 
 all: $(EXEC)
 
@@ -16,7 +16,7 @@ OBJS = $(COMMON_OBJS)
 %.x: %.o $(COMMON_OBJS)
 	$(CXX) -o $@ $^ $(LIB)
 
-cpuid: cpuid.c msr-old.c
+cpuid.x: cpuid.c msr-old.c
 	$(CXX) -o $@.x $^
 
 .PHONY: clean

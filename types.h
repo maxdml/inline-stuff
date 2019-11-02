@@ -193,4 +193,57 @@ struct counter_table_t {
     uint64_t id;
 };
 
+typedef struct
+{
+    union
+    {
+        struct
+        {
+            uint32_t cache_type : 4;
+            uint32_t reserved1 : 1;
+            uint32_t level : 3;
+            uint32_t self_init_level : 1;
+            uint32_t fully_associative : 1;
+            uint32_t reserved2 : 4;
+            uint32_t logical_procs_sharing : 12;
+            uint32_t physical_cores_in_package : 6;
+        }eax_bit_values;
+        uint32_t eax_value;
+    }eax;
+
+    union
+    {
+        struct
+        {
+            uint32_t cache_line_size : 12;
+            uint32_t physical_line_partitions : 10;
+            uint32_t ways : 10;
+        }ebx_bit_values;
+        uint32_t ebx_value;
+    }ebx;
+
+    union
+    {
+        struct
+        {
+            uint32_t num_sets : 32;
+        }ecx_bit_values;
+        uint32_t ecx_value;
+
+    }ecx;
+
+    union
+    {
+        struct
+        {
+            uint32_t unused : 1;
+            uint32_t inclusive : 1;
+            uint32_t direct_mapped : 1;
+            uint32_t reserved : 29;
+        }edx_bit_values;
+        uint32_t edx_value;
+    }edx;
+
+}cache_params;
+
 #endif // TYPES_H_
