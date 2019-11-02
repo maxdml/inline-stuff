@@ -28,6 +28,7 @@ void configure_counters(MsrHandle * cpu_msr[],
     uint32_t res;
     for (unsigned int i = 0; i < cpus.size(); ++i) {
         if (set) {
+            printf("Register a new MSR handler for cpu %d\n", cpus[i]);
             cpu_msr[i] = new MsrHandle(cpus[i]);
         }
         assert(cpu_msr[i] != nullptr);
@@ -145,7 +146,7 @@ int main()
 #else
 int main() {
     pin_thread(pthread_self(), 0);
-    std::vector<uint8_t> cpus {6}; // 0-indexed
+    std::vector<uint8_t> cpus {5, 6}; // 0-indexed
     MsrHandle * cpu_msr[cpus.size()];
 
     /* Configure counters for each core */
@@ -159,7 +160,7 @@ int main() {
         std::unique_ptr<BenchmarkThread> t(new BenchmarkThread);
         t->args.iterations = iterations;
         t->args.cpu_msr = cpu_msr[i];
-        t->t = new std::thread(cache_work, std::ref(t->args));
+        t->t = new std::thread(mybenchmark, std::ref(t->args));
         pin_thread(t->t->native_handle(), cpus[0]);
         threads.push_back(std::move(t));
     }

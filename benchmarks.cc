@@ -33,9 +33,8 @@ void run_test_benchmark(MsrHandle* cpu_msr)
     printf("total misses: %lx\n", end_miss - start_miss);
 }
 
-void cache_work(struct ThreadArgs &args) 
-{
-    args.iterations = 5;
+void cache_work(struct ThreadArgs &args) {
+    args.iterations = 5000;
     uint64_t store_start[N_CUSTOM_CTR + N_FIXED_CTR];
     uint64_t store_end[N_CUSTOM_CTR + N_FIXED_CTR];
     uint32_t i, j, k;
