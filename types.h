@@ -181,6 +181,67 @@ struct FixedEventControlRegister {
     };
 };
 
+/* PCM 1 to 8 addresses */
+#define IA32_PMC0 (0xC1)
+#define IA32_PMC1 (0xC2)
+#define IA32_PMC2 (0xC3)
+#define IA32_PMC3 (0xC4)
+#define IA32_PMC4 (0xC5)
+#define IA32_PMC5 (0xC6)
+#define IA32_PMC6 (0xC7)
+#define IA32_PMC7 (0xC8)
+
+// "Only IA32_PMC0 through IA32_PMC3 support PEBS." p 3403
+
+/* Aliases to PCM for full width writable */
+#define IA32_A_PMC0 (0x4C1);
+#define IA32_A_PMC1 (0x4C2);
+#define IA32_A_PMC2 (0x4C3);
+#define IA32_A_PMC3 (0x4C4);
+#define IA32_A_PMC4 (0x4C5);
+#define IA32_A_PMC5 (0x4C6);
+#define IA32_A_PMC6 (0x4C7);
+#define IA32_A_PMC7 (0x4C8);
+
+/* Event selector registers addresses */
+#define IA32_PERFEVTSEL0_ADDR (0x186)
+#define IA32_PERFEVTSEL1_ADDR (0x187)
+#define IA32_PERFEVTSEL2_ADDR (0x188)
+#define IA32_PERFEVTSEL3_ADDR (0x189)
+#define IA32_PERFEVTSEL4_ADDR (0x18A)
+#define IA32_PERFEVTSEL5_ADDR (0x18B)
+#define IA32_PERFEVTSEL6_ADDR (0x18C)
+#define IA32_PERFEVTSEL7_ADDR (0x18D)
+
+/* Architectural performance events (vol 3B. 19.1) */
+#define ARCH_LLC_REFERENCE_EVTNR        (0x2E)
+#define ARCH_LLC_REFERENCE_UMASK        (0x4F)
+
+#define ARCH_LLC_MISS_EVTNR     (0x2E)
+#define ARCH_LLC_MISS_UMASK     (0x41)
+
+/* Skylake events (Vol 3B. 19.2) */
+#define L2_RQSTS_REFERENCES_EVTNR (0x24)
+#define L2_RQSTS_REFERENCES_UMASK  (0xFF)
+
+#define MEM_LOAD_RETIRED_L3_MISS_EVTNR (0xD1)
+#define MEM_LOAD_RETIRED_L3_MISS_UMASK (0x20)
+
+#define MEM_LOAD_RETIRED_L3_HIT_EVTNR (0xD1)
+#define MEM_LOAD_RETIRED_L3_HIT_UMASK (0x04)
+
+#define MEM_LOAD_RETIRED_L2_MISS_EVTNR (0xD1)
+#define MEM_LOAD_RETIRED_L2_MISS_UMASK (0x10)
+
+#define MEM_LOAD_RETIRED_L2_HIT_EVTNR (0xD1)
+#define MEM_LOAD_RETIRED_L2_HIT_UMASK (0x02)
+
+#define MEM_LOAD_RETIRED_L1_HIT_EVTNR (0xD1)
+#define MEM_LOAD_RETIRED_L1_HIT_UMASK (0x01)
+
+#define MEM_LOAD_RETIRED_L1_MISS_EVTNR (0xD1)
+#define MEM_LOAD_RETIRED_L1_MISS_UMASK (0x08)
+
 /*
     According to
     "Intel 64 and IA-32 Architectures Software Developers Manual Volume 3B:
@@ -211,17 +272,6 @@ struct EventSelectRegister {
     EventSelectRegister() : value(0) {}
 };
 
-#define FIXED_CTR 0x0
-#define CUSTOM_CTR 0x1
-struct counter_table_t {
-    const char *name;
-    uint64_t ctr_type;
-    uint64_t evtnr;
-    uint64_t umask;
-    uint64_t cfg_reg;
-    uint64_t pmc;
-    uint64_t id;
-};
 
 /**
   * Cache information registers' structure
@@ -275,4 +325,34 @@ typedef struct
     }edx;
 }cache_params;
 
+//FIXME: we likely don't need this id field
+#define FIXED_CTR 0x0
+#define CUSTOM_CTR 0x1
+struct counter_table_t {
+    const char *name;
+    uint64_t ctr_type;
+    uint64_t evtnr;
+    uint64_t umask;
+    uint64_t cfg_reg;
+    uint64_t pmc;
+    uint64_t id;
+};
+
+static struct counter_table_t counter_tbl[] = {
+    {"L3_MISSES",       CUSTOM_CTR,     ARCH_LLC_MISS_EVTNR,           ARCH_LLC_MISS_UMASK,         IA32_PERFEVTSEL0_ADDR,  IA32_PMC0,                      0},
+    {"L3_HITS",         CUSTOM_CTR,     ARCH_LLC_REFERENCE_EVTNR,      ARCH_LLC_REFERENCE_UMASK,    IA32_PERFEVTSEL1_ADDR,  IA32_PMC1,                      1},
+    { NULL,             0x0,            0x0,                           0x0,                         0x0,                    0x0,                            0}
+};
+
+//static struct counter_table_t counter_tbl[] = {
+//    {"L1_HITS",         CUSTOM_CTR,     MEM_LOAD_RETIRED_L1_HIT_EVTNR,      MEM_LOAD_RETIRED_L1_HIT_UMASK,  IA32_PERFEVTSEL0_ADDR,  IA32_PMC0,                      0},
+//    {"L1_MISSES",       CUSTOM_CTR,     MEM_LOAD_RETIRED_L1_MISS_EVTNR,     MEM_LOAD_RETIRED_L1_MISS_UMASK, IA32_PERFEVTSEL1_ADDR,  IA32_PMC1,                      1},
+//    {"L2_HITS",         CUSTOM_CTR,     MEM_LOAD_RETIRED_L2_HIT_EVTNR,      MEM_LOAD_RETIRED_L2_HIT_UMASK,  IA32_PERFEVTSEL2_ADDR,  IA32_PMC2,                      2},
+//    {"L2_MISSES",       CUSTOM_CTR,     MEM_LOAD_RETIRED_L2_MISS_EVTNR,     MEM_LOAD_RETIRED_L2_MISS_UMASK, IA32_PERFEVTSEL3_ADDR,  IA32_PMC3,                      3},
+//    {"L3_HITS",         CUSTOM_CTR,     MEM_LOAD_RETIRED_L2_HIT_EVTNR,      MEM_LOAD_RETIRED_L2_HIT_UMASK,  IA32_PERFEVTSEL4_ADDR,  IA32_PMC4,                      4},
+//    {"L3_MISSES",       CUSTOM_CTR,     MEM_LOAD_RETIRED_L2_MISS_EVTNR,     MEM_LOAD_RETIRED_L2_MISS_UMASK, IA32_PERFEVTSEL5_ADDR,  IA32_PMC5,                      5},
+//    {"CPU_CYCLES",      FIXED_CTR,      0x0,                                0x0,                            IA32_CR_FIXED_CTR_CTRL, CPU_CLK_UNHALTED_THREAD_ADDR,   6},
+//    {"INSN_RETIRED",    FIXED_CTR,      0x0,                                0x0,                            IA32_CR_FIXED_CTR_CTRL, INST_RETIRED_ANY_ADDR,          7},
+//    { NULL,             0x0,            0x0,                                0x0,                            0x0,                    0x0,                            0}
+//};
 #endif // TYPES_H_
