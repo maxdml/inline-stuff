@@ -91,7 +91,8 @@ void configure_counters(MsrHandle * cpu_msr[],
                 }
                 if (counter_tbl[c].ctr_type == CUSTOM_CTR) {
                     EventSelectRegister evt_reg;
-                    res = cpu_msr[i]->read(counter_tbl[c].cfg_reg + c, &evt_reg.value);
+                    //res = cpu_msr[i]->read(counter_tbl[c].cfg_reg + c, &evt_reg.value);
+                    res = cpu_msr[i]->read(counter_tbl[c].cfg_reg, &evt_reg.value);
                     assert (res >= 0);
 
                     evt_reg.value = 0;
@@ -110,7 +111,8 @@ void configure_counters(MsrHandle * cpu_msr[],
                     evt_reg.fields.pin_control = 0;
                     evt_reg.fields.apic_int = 0;
 
-                    res = cpu_msr[i]->write(counter_tbl[c].cfg_reg + c, evt_reg.value);
+                    //res = cpu_msr[i]->write(counter_tbl[c].cfg_reg + c, evt_reg.value);
+                    res = cpu_msr[i]->write(counter_tbl[c].cfg_reg, evt_reg.value);
                     assert (res >= 0);
 
                     value += (1ULL << counter_tbl[c].id);

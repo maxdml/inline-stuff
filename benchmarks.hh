@@ -85,15 +85,15 @@ class BenchmarkThread {
 };
 
 static struct counter_table_t counter_tbl[] = {
-    {"L3_HITS",         CUSTOM_CTR,     ARCH_LLC_REFERENCE_EVTNR,      ARCH_LLC_REFERENCE_UMASK,    IA32_PERFEVTSEL0_ADDR,  IA32_PMC0,                      0},
-    {"L3_MISSES",       CUSTOM_CTR,     ARCH_LLC_MISS_EVTNR,           ARCH_LLC_MISS_UMASK,         IA32_PERFEVTSEL1_ADDR,  IA32_PMC1,                      1},
+    {"L3_MISSES",       CUSTOM_CTR,     ARCH_LLC_MISS_EVTNR,           ARCH_LLC_MISS_UMASK,         IA32_PERFEVTSEL0_ADDR,  IA32_PMC0,                      0},
+    {"L3_HITS",         CUSTOM_CTR,     ARCH_LLC_REFERENCE_EVTNR,      ARCH_LLC_REFERENCE_UMASK,    IA32_PERFEVTSEL1_ADDR,  IA32_PMC1,                      1},
     { NULL,             0x0,            0x0,                           0x0,                         0x0,                    0x0,                            0}
 };
 
 //static struct counter_table_t counter_tbl[] = {
 //    {"L2_HITS",         CUSTOM_CTR,     MEM_LOAD_RETIRED_L2_HIT_EVTNR,      MEM_LOAD_RETIRED_L2_HIT_UMASK,  IA32_PERFEVTSEL0_ADDR,  IA32_PMC0,                      0},
 //    {"L2_MISSES",       CUSTOM_CTR,     MEM_LOAD_RETIRED_L2_MISS_EVTNR,     MEM_LOAD_RETIRED_L2_MISS_UMASK, IA32_PERFEVTSEL1_ADDR,  IA32_PMC1,                      1},
-//    {"L3_HITS",         CUSTOM_CTR,     MEM_LOAD_RETIRED_L2_HIT_EVTNR,      MEM_LOAD_RETIRED_L2_HIT_UMASK,  IA32_PERFEVTSEL2_ADDR,  IA32_PMC2,                      2},
+//    {"L3_HITS",         CUSTOM_CTR,     MEM_LOAD_RETIRED_L3_HIT_EVTNR,      MEM_LOAD_RETIRED_L2_HIT_UMASK,  IA32_PERFEVTSEL2_ADDR,  IA32_PMC2,                      2},
 //    {"L3_MISSES",       CUSTOM_CTR,     MEM_LOAD_RETIRED_L3_MISS_EVTNR,     MEM_LOAD_RETIRED_L3_MISS_UMASK, IA32_PERFEVTSEL3_ADDR,  IA32_PMC3,                      3},
 //    {"CPU_CYCLES",      FIXED_CTR,      0x0,                                0x0,                            IA32_CR_FIXED_CTR_CTRL, CPU_CLK_UNHALTED_THREAD_ADDR,   4},
 //    {"INSN_RETIRED",    FIXED_CTR,      0x0,                                0x0,                            IA32_CR_FIXED_CTR_CTRL, INST_RETIRED_ANY_ADDR,          5},
@@ -103,6 +103,7 @@ static struct counter_table_t counter_tbl[] = {
 static void read_values(MsrHandle *cpu_msr, uint64_t *store) {
     for (int i = 0; counter_tbl[i].name; ++i) {
         cpu_msr->read(counter_tbl[i].pmc, &store[i]);
+        printf("value of counter %d is %lu\n", i, store[i]);
     }
 }
 

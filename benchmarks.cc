@@ -4,6 +4,7 @@
 #include <pthread.h>
 #include <iostream>
 #include <stdint.h>
+#include <unistd.h>
 
 #include "benchmarks.hh"
 
@@ -18,19 +19,32 @@ void run_test_benchmark(MsrHandle* cpu_msr)
     uint8_t c;
     uint64_t start_ref, end_ref, start_miss, end_miss; 
 
-    cpu_msr->read(ARCH_LLC_REFERENCE_EVTNR, &start_ref); 
-    cpu_msr->read(ARCH_LLC_MISS_EVTNR, &start_miss); 
-
+    cpu_msr->read(IA32_PMC0, &start_miss); 
+    cpu_msr->read(IA32_PMC1, &start_ref); 
+    printf("start miss: %lu\n", start_miss);
+    printf("start ref: %lu\n", start_ref);
+    
+    //uint64_t store_start[2];
+    //read_values(cpu_msr, store_start);
     for(int i = 0; i < 64; i++)
     {
         c = arr[i];
     }
-    
-    cpu_msr->read(ARCH_LLC_REFERENCE_EVTNR, &end_ref); 
-    cpu_msr->read(ARCH_LLC_MISS_EVTNR, &end_miss); 
 
-    printf("total references: %lx\n", end_ref - start_ref);
-    printf("total misses: %lx\n", end_miss - start_miss);
+    sleep(1);
+    
+    cpu_msr->read(IA32_PMC0, &end_miss); 
+    cpu_msr->read(IA32_PMC1, &end_ref); 
+    printf("end miss: %lu\n", end_miss);
+    printf("end ref: %lu\n", end_ref);
+    printf("total misses: %lu\n", end_miss - start_miss);
+    printf("total references: %lu\n", end_ref - start_ref);
+    
+    //uint64_t store_end[2];
+    //read_values(cpu_msr, store_end);
+    //printf("%lu\n", store_end[0] - store_start[0]);
+    //printf("%lu\n", store_end[1] - store_start[1]);
+
 }
 
 void cache_work(struct ThreadArgs &args) 
