@@ -63,7 +63,7 @@ void configure_counters(MsrHandle * cpu_msr[],
             assert(res >= 0);
             uint64_t value = 0;
             if (N_FIXED_CTR > 0) {
-                ctrl_reg.fields.os0 = 1;
+                ctrl_reg.fields.os0 = 0;
                 ctrl_reg.fields.usr0 = 1;
                 ctrl_reg.fields.any_thread0 = 0;
                 ctrl_reg.fields.enable_pmi0 = 0;
@@ -128,14 +128,14 @@ void configure_counters(MsrHandle * cpu_msr[],
 #if 1
 int main()
 {
-    pin_thread(pthread_self(), 0);
-    std::vector<uint8_t> cpus = {0}; // 0-indexed
+    pin_thread(pthread_self(), 2);
+    std::vector<uint8_t> cpus = {2}; // 0-indexed
     MsrHandle * cpu_msr[1];
 
     /* Configure counters for each core */
     configure_counters(cpu_msr, cpus, true);
     
-    run_test_benchmark(cpu_msr[0]);
+    bm_single_array(cpu_msr[0]);
     
     /* Clean MSRs */
     configure_counters(cpu_msr, cpus, false);

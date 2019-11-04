@@ -8,43 +8,65 @@
 
 #include "benchmarks.hh"
 
-void run_test_benchmark(MsrHandle* cpu_msr)
+#define MAX_ROW     512
+#define MAX_COL     64
+#define NUM_PASSES  6
+
+uint8_t arr[MAX_ROW][MAX_COL] = {0};
+uint8_t arr2[MAX_ROW][MAX_COL] = {0};
+
+void bm_single_array(MsrHandle* cpu_msr)
 {
     if (cpu_msr == NULL)
     {
         printf("handle is NULL\n");
         return;
     }
-    uint8_t arr[64] = {0};
     uint8_t c;
-    uint64_t start_ref, end_ref, start_miss, end_miss; 
 
-    cpu_msr->read(IA32_PMC0, &start_miss); 
-    cpu_msr->read(IA32_PMC1, &start_ref); 
-    printf("start miss: %lu\n", start_miss);
-    printf("start ref: %lu\n", start_ref);
+    uint64_t store_start[2];
+    uint64_t store_end[2];
     
-    //uint64_t store_start[2];
-    //read_values(cpu_msr, store_start);
-    for(int i = 0; i < 64; i++)
+    for (int k = 0; k < NUM_PASSES; k++)
     {
-        c = arr[i];
+        read_values(cpu_msr, store_start);
+        for (unsigned int i = 0 ; i < MAX_ROW; i++)
+            for (unsigned j = 0; j < MAX_COL; j++)
+                c = arr[i][j];
+
+        read_values(cpu_msr, store_end);
+        printf("L1 hits : %lu\n", store_end[0] - store_start[0]);
+        printf("L1 misses: %lu\n", store_end[1] - store_start[1]);
     }
+}
 
-    sleep(1);
-    
-    cpu_msr->read(IA32_PMC0, &end_miss); 
-    cpu_msr->read(IA32_PMC1, &end_ref); 
-    printf("end miss: %lu\n", end_miss);
-    printf("end ref: %lu\n", end_ref);
-    printf("total misses: %lu\n", end_miss - start_miss);
-    printf("total references: %lu\n", end_ref - start_ref);
-    
-    //uint64_t store_end[2];
-    //read_values(cpu_msr, store_end);
-    //printf("%lu\n", store_end[0] - store_start[0]);
-    //printf("%lu\n", store_end[1] - store_start[1]);
+void bm_multiple_arrays(MsrHandle* cpu_msr)
+{
+    if (cpu_msr == NULL)
+    {
+        printf("handle is NULL\n");
+        return;
+    }
+    uint8_t c;
 
+    uint64_t store_start[2];
+    uint64_t store_end[2];
+    
+    for (int k = 0; k < NUM_PASSES; k++)
+    {
+        read_values(cpu_msr, store_start);
+        for (unsigned int i = 0 ; i < MAX_ROW; i++)
+            for (unsigned j = 0; j < MAX_COL; j++)
+                c = arr[i][j];
+
+        for (unsigned int i = 0 ; i < MAX_ROW; i++)
+            for (unsigned j = 0; j < MAX_COL; j++)
+                c = arr2[i][j];
+
+        read_values(cpu_msr, store_end);
+        printf("L1 hits : %lu\n", store_end[0] - store_start[0]);
+        printf("L1 misses: %lu\n", store_end[1] - store_start[1]);
+    }
 }
 
 void cache_work(struct ThreadArgs &args) {
