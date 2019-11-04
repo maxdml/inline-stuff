@@ -71,9 +71,9 @@ struct ThreadArgs {
     MsrHandle *cpu_msr = nullptr;
 };
 
-/*********************
+/*************************************
  * Benchmark threads & MSR utilities *
- *********************/
+ *************************************/
 class BenchmarkThread {
     public:
         std::thread *t;
@@ -87,13 +87,13 @@ class BenchmarkThread {
 static void read_values(MsrHandle *cpu_msr, uint64_t *store) {
     for (int i = 0; counter_tbl[i].name; ++i) {
         cpu_msr->read(counter_tbl[i].pmc, &store[i]);
-        printf("value of counter %d is %lu\n", i, store[i]);
+        //printf("value of counter %d is %lu\n", i, store[i]);
     }
 }
 
 /***********************
  * Benchmark functions *
  ***********************/
-void run_test_benchmark(MsrHandle* cpu_msr);
+void run_test_benchmark(ThreadArgs &args);
 void cache_work(struct ThreadArgs &args);
 void file_work(struct ThreadArgs args);
