@@ -11,6 +11,11 @@
 #include "msr.hh"
 #include "benchmarks.hh"
 
+typedef void (*BenchmarkFunc)(struct ThreadArgs &args);
+//static BenchmarkFunc func = &run_test_benchmark;
+std::vector<uint8_t> cpus = {5, 6}; // 0-indexed
+uint32_t iterations = 10000;
+
 void pin_thread(pthread_t thread, u_int16_t cpu) {
     cpu_set_t cpuset;
     CPU_ZERO(&cpuset);
@@ -92,7 +97,6 @@ void configure_counters(MsrHandle * cpu_msr[],
                 }
                 if (counter_tbl[c].ctr_type == CUSTOM_CTR) {
                     EventSelectRegister evt_reg;
-                    //res = cpu_msr[i]->read(counter_tbl[c].cfg_reg + c, &evt_reg.value);
                     res = cpu_msr[i]->read(counter_tbl[c].cfg_reg, &evt_reg.value);
                     assert (res >= 0);
 
@@ -112,7 +116,6 @@ void configure_counters(MsrHandle * cpu_msr[],
                     evt_reg.fields.pin_control = 0;
                     evt_reg.fields.apic_int = 0;
 
-                    //res = cpu_msr[i]->write(counter_tbl[c].cfg_reg + c, evt_reg.value);
                     res = cpu_msr[i]->write(counter_tbl[c].cfg_reg, evt_reg.value);
                     assert (res >= 0);
 
@@ -125,6 +128,8 @@ void configure_counters(MsrHandle * cpu_msr[],
         }
     }
 }
+
+/** Using this main function for some more testing */
 #if 1
 int main()
 {
@@ -148,13 +153,10 @@ int main()
 #else
 int main() {
     pin_thread(pthread_self(), 0);
-    std::vector<uint8_t> cpus {5, 6}; // 0-indexed
     MsrHandle * cpu_msr[cpus.size()];
 
     /* Configure counters for each core */
     configure_counters(cpu_msr, cpus, true);
-
-    uint32_t iterations = 10000;
 
     std::vector<std::unique_ptr<BenchmarkThread> > threads;
     /* Setup benchmark threads */
@@ -162,7 +164,7 @@ int main() {
         std::unique_ptr<BenchmarkThread> t(new BenchmarkThread);
         t->args.iterations = iterations;
         t->args.cpu_msr = cpu_msr[i];
-        t->t = new std::thread(mybenchmark, std::ref(t->args));
+        t->t = new std::thread(func, std::ref(t->args));
         pin_thread(t->t->native_handle(), cpus[0]);
         threads.push_back(std::move(t));
     }

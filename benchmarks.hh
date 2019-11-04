@@ -71,9 +71,9 @@ struct ThreadArgs {
     MsrHandle *cpu_msr = nullptr;
 };
 
-/*********************
+/*************************************
  * Benchmark threads & MSR utilities *
- *********************/
+ *************************************/
 class BenchmarkThread {
     public:
         std::thread *t;

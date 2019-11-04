@@ -70,7 +70,6 @@ void bm_multiple_arrays(MsrHandle* cpu_msr)
 }
 
 void cache_work(struct ThreadArgs &args) {
-    args.iterations = 5000;
     uint64_t store_start[N_CUSTOM_CTR + N_FIXED_CTR];
     uint64_t store_end[N_CUSTOM_CTR + N_FIXED_CTR];
     uint32_t i, j, k;
