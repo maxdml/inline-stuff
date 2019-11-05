@@ -69,6 +69,38 @@ void bm_multiple_arrays(MsrHandle* cpu_msr)
     }
 }
 
+void oned_arrays(struct ThreadArgs &args) {
+    printf("Starting MB worker %d\n", args.id);
+    uint64_t *store_start = static_cast<uint64_t *>(malloc((N_CUSTOM_CTR + N_FIXED_CTR) * sizeof(uint64_t)));
+    uint64_t *store_end = static_cast<uint64_t *>(malloc((N_CUSTOM_CTR + N_FIXED_CTR) * sizeof(uint64_t)));
+
+    int n = 4096; // 512 * 8
+
+    /* Fill the array */
+    volatile uint64_t *a = static_cast<uint64_t *>(malloc(sizeof(uint64_t) * n));
+    for (int i = 0; i < n; ++i) {
+        a[i] = xorshift128plus(mat_rng) >> 11;
+    }
+
+    volatile uint64_t *b = static_cast<uint64_t *>(malloc(sizeof(uint64_t) * n));
+    /* Access it */
+    for (unsigned int i = 0; i < args.iterations; ++i) {
+        read_values(args.cpu_msr, store_start);
+        for (int j = 0; j < n; ++j) {
+            b[j] = a[j];
+            //__asm__ volatile("clflush (%0)" : : "r" ((volatile void *)& a[j]) : "memory");
+        }
+        read_values(args.cpu_msr, store_end);
+        for (int c = 0; counter_tbl[c].name; ++c) {
+            args.values(c, args.counts) = store_end[c] - store_start[c];
+        }
+        args.counts++;
+    }
+
+    free(store_start);
+    free(store_end);
+}
+
 void cache_work(struct ThreadArgs &args) {
     uint64_t store_start[N_CUSTOM_CTR + N_FIXED_CTR];
     uint64_t store_end[N_CUSTOM_CTR + N_FIXED_CTR];
@@ -117,7 +149,7 @@ void cache_work(struct ThreadArgs &args) {
 // 2.2M /media/memfs/wiki/fr/i/t/a/Projet~Italie_Catégorisation_f5a3.html
 // 2.1M /media/memfs/wiki/fr/z/x/8/Utilisateur~ZX81-bot_Journaux_2007042701_125f.html
 
-void file_work(struct ThreadArgs args) {
+void file_work(struct ThreadArgs &args) {
     std::string f1 = "/media/memfs/wiki/fr/h/e/x/Utilisateur~Hexasoft_Statistiques_Geckonidé_41ae.html";
     std::string f2 = "/media/memfs/wiki/fr/c/l/n/Utilisateur~Cln-id_monobook.js_9900.html";
     //std::string f1 = "/media/memfs/wiki/fr/b/u/l/Wikipédia~Bulletin_des_administrateurs_Février_2007_8e0a.html";
@@ -156,4 +188,3 @@ void file_work(struct ThreadArgs args) {
     }
     pthread_exit(NULL);
 }
-

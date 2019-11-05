@@ -41,6 +41,7 @@ void configure_counters(MsrHandle * cpu_msr[],
         /* Disable counters while programming */
         cpu_msr[i]->write(IA32_CR_PERF_GLOBAL_CTRL, 0);
 
+        std::cout << "Resetting counters..." << std::endl;
         /* Reset all PMCs */
         for (int c = 0; c < PERF_MAX_CUSTOM_COUNTERS; ++c) {
             res = cpu_msr[i]->write(IA32_PMC0 + c, 0);
@@ -63,6 +64,7 @@ void configure_counters(MsrHandle * cpu_msr[],
             cpu_msr[i]->write(IA32_CR_FIXED_CTR_CTRL, 0);
 
         if (set) {
+            std::cout << "Configuring counters..." << std::endl;
             /* Configure fixed registers */
             res = cpu_msr[i]->read(IA32_CR_FIXED_CTR_CTRL, &ctrl_reg.value);
             assert(res >= 0);
@@ -119,7 +121,7 @@ void configure_counters(MsrHandle * cpu_msr[],
                     res = cpu_msr[i]->write(counter_tbl[c].cfg_reg, evt_reg.value);
                     assert (res >= 0);
 
-                    value += (1ULL << counter_tbl[c].id);
+                    value += (1ULL << c);
                 }
             }
 
@@ -164,6 +166,7 @@ int main() {
         std::unique_ptr<BenchmarkThread> t(new BenchmarkThread);
         t->args.iterations = iterations;
         t->args.cpu_msr = cpu_msr[i];
+        t->args.id = i;
         t->t = new std::thread(func, std::ref(t->args));
         pin_thread(t->t->native_handle(), cpus[0]);
         threads.push_back(std::move(t));

@@ -65,6 +65,8 @@ class MultiArray {
 struct ThreadArgs {
     uint32_t iterations = 0;
 
+    uint32_t id;
+
     /* Profiling */
     MultiArray<uint64_t, N_CUSTOM_CTR + N_FIXED_CTR, MAX_PTS> values;
     uint64_t counts = 0;
@@ -86,6 +88,7 @@ class BenchmarkThread {
 
 static void read_values(MsrHandle *cpu_msr, uint64_t *store) {
     for (int i = 0; counter_tbl[i].name; ++i) {
+        //printf("Reading counter %d from %x\n", i, counter_tbl[i].pmc);
         cpu_msr->read(counter_tbl[i].pmc, &store[i]);
         //printf("value of counter %d is %lu\n", i, store[i]);
     }
@@ -97,4 +100,5 @@ static void read_values(MsrHandle *cpu_msr, uint64_t *store) {
 void bm_single_array(MsrHandle* cpu_msr);
 void bm_multiple_arrays(MsrHandle* cpu_msr);
 void cache_work(struct ThreadArgs &args);
-void file_work(struct ThreadArgs args);
+void file_work(struct ThreadArgs &args);
+void oned_arrays(struct ThreadArgs &args);
