@@ -5,7 +5,7 @@ all: $(EXEC)
 CXXFLAGS += -Wall -ggdb -O0
 CXXFLAGS += -std=c++17
 #CXXFLAGS += -lasan -fsanitize=address
-LIB = -lpthread
+LIB = -lpthread -lboost_program_options
 #LIB += -fsanitize=address
 
 COMMON_OBJS = main.o msr.o benchmarks.o

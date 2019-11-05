@@ -8,6 +8,10 @@
 #include <stdio.h>
 #include <assert.h>
 
+#include <boost/optional.hpp>
+#include <boost/program_options.hpp>
+namespace bpo = boost::program_options;
+
 #include "msr.hh"
 #include "benchmarks.hh"
 
@@ -132,7 +136,29 @@ void configure_counters(MsrHandle * cpu_msr[],
 }
 
 /** Using this main function for some more testing */
-int main() {
+int main(int argc, char *argv[]) {
+    std::string log_dir, label;
+    bpo::options_description desc{"echo experiment options"};
+    desc.add_options()
+        ("help", "produce help message")
+        ("log-dir,d", bpo::value<std::string>(&log_dir)->default_value("./"), "specify log directory")
+        ("label,l", bpo::value<std::string>(&label)->default_value("mymicrobench"), "specify MB label");
+    bpo::variables_map vm;
+    try {
+        bpo::parsed_options parsed =
+            bpo::command_line_parser(argc, argv).options(desc).allow_unregistered().run();
+        bpo::store(parsed, vm);
+        if (vm.count("help")) {
+            std::cout << desc << std::endl;
+            exit(0);
+        }
+        bpo::notify(vm);
+    } catch (const bpo::error &e) {
+        std::cerr << e.what() << std::endl;
+        std::cerr << desc << std::endl;
+        exit(0);
+    }
+
     pin_thread(pthread_self(), 0);
     MsrHandle * cpu_msr[cpus.size()];
 
@@ -151,7 +177,8 @@ int main() {
         threads.push_back(std::move(t));
     }
 
-    FILE *f = fopen("mb.csv", "w");
+    std::string filepath = log_dir + "/" + label + ".csv";
+    FILE *f = fopen(filepath.c_str(), "w");
     if (f) {
         fprintf(f, "TID");
         uint8_t i = 0;
