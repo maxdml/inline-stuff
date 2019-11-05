@@ -77,14 +77,14 @@ void configure_counters(MsrHandle * cpu_msr[],
                 value += (1ULL << 32);
             }
             if (N_FIXED_CTR > 1) {
-                ctrl_reg.fields.os1 = 1;
+                ctrl_reg.fields.os1 = 0;
                 ctrl_reg.fields.usr1 = 1;
                 ctrl_reg.fields.any_thread1 = 0;
                 ctrl_reg.fields.enable_pmi1 = 0;
                 value += (1ULL << 33);
             }
             if (N_FIXED_CTR > 2) {
-                ctrl_reg.fields.os2 = 1;
+                ctrl_reg.fields.os2 = 0;
                 ctrl_reg.fields.usr2 = 1;
                 ctrl_reg.fields.any_thread2 = 0;
                 ctrl_reg.fields.enable_pmi2 = 0;
@@ -105,7 +105,7 @@ void configure_counters(MsrHandle * cpu_msr[],
                     evt_reg.value = 0;
 
                     evt_reg.fields.usr = 1;
-                    evt_reg.fields.os = 1;
+                    evt_reg.fields.os = 0;
                     evt_reg.fields.enable = 1;
                     evt_reg.fields.event_select = counter_tbl[c].evtnr;
                     evt_reg.fields.umask = counter_tbl[c].umask;
@@ -121,7 +121,7 @@ void configure_counters(MsrHandle * cpu_msr[],
                     res = cpu_msr[i]->write(counter_tbl[c].cfg_reg, evt_reg.value);
                     assert (res >= 0);
 
-                    value += (1ULL << c);
+                    value += (1ULL << counter_tbl[c].id);
                 }
             }
 
