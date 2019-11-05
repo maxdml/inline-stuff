@@ -3,7 +3,7 @@
 #include "msr.hh"
 
 #define N_FIXED_CTR 0
-#define N_CUSTOM_CTR 2
+#define N_CUSTOM_CTR 4
 #define MAX_PTS 50000
 
 /*********************

@@ -12,9 +12,9 @@
 #include "benchmarks.hh"
 
 typedef void (*BenchmarkFunc)(struct ThreadArgs &args);
-//static BenchmarkFunc func = &run_test_benchmark;
-std::vector<uint8_t> cpus = {5, 6}; // 0-indexed
-uint32_t iterations = 10000;
+static BenchmarkFunc func = &oned_arrays;
+std::vector<uint8_t> cpus = {6}; // 0-indexed
+uint32_t iterations = 100;
 
 void pin_thread(pthread_t thread, u_int16_t cpu) {
     cpu_set_t cpuset;
@@ -132,27 +132,6 @@ void configure_counters(MsrHandle * cpu_msr[],
 }
 
 /** Using this main function for some more testing */
-#if 1
-int main()
-{
-    pin_thread(pthread_self(), 2);
-    std::vector<uint8_t> cpus = {2}; // 0-indexed
-    MsrHandle * cpu_msr[1];
-
-    /* Configure counters for each core */
-    configure_counters(cpu_msr, cpus, true);
-    
-    bm_single_array(cpu_msr[0]);
-    
-    /* Clean MSRs */
-    configure_counters(cpu_msr, cpus, false);
-    for (unsigned int i = 0; i < cpus.size(); ++i) {
-        delete cpu_msr[i];
-    }
-
-    return 0;
-}
-#else
 int main() {
     pin_thread(pthread_self(), 0);
     MsrHandle * cpu_msr[cpus.size()];
@@ -206,4 +185,3 @@ int main() {
 
     return 0;
 }
-#endif
