@@ -390,7 +390,7 @@ int main (int argc, char *argv[])
     }
     else
     {
-        //getCpuID();
+        getCpuID();
         //if (are_msr_insns_enabled())
         //    printf("RDMSR and WRMSR instructions are enabled\n");
         //else

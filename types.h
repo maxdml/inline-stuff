@@ -318,17 +318,18 @@ struct counter_table_t {
     uint8_t id;
 };
 
-/*
+#if 1
 static struct counter_table_t counter_tbl[] = {
     {"L2_HITS",         CUSTOM_CTR,     MEM_LOAD_RETIRED_L2_HIT_EVTNR,      MEM_LOAD_RETIRED_L2_HIT_UMASK,  IA32_PERFEVTSEL0_ADDR,  IA32_PMC0,                      0},
     {"L2_MISSES",       CUSTOM_CTR,     MEM_LOAD_RETIRED_L2_MISS_EVTNR,     MEM_LOAD_RETIRED_L2_MISS_UMASK, IA32_PERFEVTSEL1_ADDR,  IA32_PMC1,                      1},
-    {"L1_MISSES",       CUSTOM_CTR,     MEM_LOAD_RETIRED_L1_MISS_EVTNR,     MEM_LOAD_RETIRED_L1_MISS_UMASK, IA32_PERFEVTSEL2_ADDR,  IA32_PMC2,                      2},
-    {"L1_HITS",         CUSTOM_CTR,     MEM_LOAD_RETIRED_L1_HIT_EVTNR,      MEM_LOAD_RETIRED_L1_HIT_UMASK,  IA32_PERFEVTSEL3_ADDR,  IA32_PMC3,                      3},
+//    {"L1_HITS",         CUSTOM_CTR,     MEM_LOAD_RETIRED_L1_HIT_EVTNR,      MEM_LOAD_RETIRED_L1_HIT_UMASK,  IA32_PERFEVTSEL2_ADDR,  IA32_PMC2,                      2},
+//    {"L1_MISSES",       CUSTOM_CTR,     MEM_LOAD_RETIRED_L1_MISS_EVTNR,     MEM_LOAD_RETIRED_L1_MISS_UMASK, IA32_PERFEVTSEL3_ADDR,  IA32_PMC3,                      3},
 //    {"L3_MISSES",       CUSTOM_CTR,     ARCH_LLC_MISS_EVTNR,           ARCH_LLC_MISS_UMASK,         IA32_PERFEVTSEL0_ADDR,  IA32_PMC0,                      0},
 //    {"L3_HITS",         CUSTOM_CTR,     ARCH_LLC_REFERENCE_EVTNR,      ARCH_LLC_REFERENCE_UMASK,    IA32_PERFEVTSEL1_ADDR,  IA32_PMC1,                      1},
     { NULL,             0x0,            0x0,                           0x0,                         0x0,                    0x0,                            0}
 };
-*/
+
+#else
 
 static struct counter_table_t counter_tbl[] = {
     /*
@@ -353,4 +354,6 @@ static struct counter_table_t counter_tbl[] = {
     */
     { NULL,             0x0,            0x0,                                0x0,                            0x0,                    0x0,                             0x0}
 };
+#endif
+
 #endif // TYPES_H_

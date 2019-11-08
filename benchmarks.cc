@@ -27,7 +27,7 @@ void bm_single_array(MsrHandle* cpu_msr)
     uint64_t store_start[2];
     uint64_t store_end[2];
     
-    for (int k = 0; k < NUM_PASSES; k++)
+    for (int k = 0; k < 1; k++)
     {
         read_values(cpu_msr, store_start);
         for (unsigned int i = 0 ; i < MAX_ROW; i++)
@@ -35,8 +35,8 @@ void bm_single_array(MsrHandle* cpu_msr)
                 c = arr[i][j];
 
         read_values(cpu_msr, store_end);
-        printf("L1 hits : %lu\n", store_end[0] - store_start[0]);
-        printf("L1 misses: %lu\n", store_end[1] - store_start[1]);
+        printf("L2 hits : %lu\n", store_end[0] - store_start[0]);
+        printf("L2 misses: %lu\n", store_end[1] - store_start[1]);
     }
 }
 
