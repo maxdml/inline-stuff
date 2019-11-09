@@ -2,19 +2,26 @@ EXEC = main.x  cpuid.x msr.x
 
 all: $(EXEC)
 
-CXXFLAGS += -Wall -ggdb -O0
+CXXFLAGS += -Wall -O0 -ggdb
 CXXFLAGS += -std=c++17
 #CXXFLAGS += -lasan -fsanitize=address
 LIB = -lpthread -lboost_program_options
 #LIB += -fsanitize=address
 
-COMMON_OBJS = main.o msr.o benchmarks.o
-OBJS = $(COMMON_OBJS)
+OBJS = main.o msr.o benchmarks.o
+DEPS = $(OBJS:.o=.d)
 
 .PRECIOUS: $(OBJS)
 
-%.x: %.o $(COMMON_OBJS)
-	$(CXX) -o $@ $^ $(LIB)
+# Linking
+%.x: $(OBJS)
+	$(CXX) $(OBJS) -o $@ $(LIB)
+
+-include $(DEP)
+# Objects and dependencies
+%.o: %.cc
+	$(CXX) -c $(CXXFLAGS) $^ -o $@ $(LIB)
+	$(CXX) -MM $(CXXFLAGS) $^ > $(@:.o=.d)
 
 cpuid.x: cpuid.c msr-old.c
 	$(CXX) -o $@ $^
@@ -22,4 +29,4 @@ cpuid.x: cpuid.c msr-old.c
 .PHONY: clean
 
 clean:
-	rm *.o *.x
+	rm *.o *.x *.d
