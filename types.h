@@ -157,6 +157,17 @@ core was not in a halt state and not in a TM stopclock state.
 #define MEM_LOAD_RETIRED_L1_MISS_EVTNR (0xD1)
 #define MEM_LOAD_RETIRED_L1_MISS_UMASK (0x08)
 
+/*================================================================================
+ *                  HASWELL EVENTS
+ *===============================================================================*/
+
+#define HW_L2_RQSTS_REFERENCES_EVTNR (0x24)
+#define HW_L2_RQSTS_REFERENCES_UMASK  (0xFF)
+
+#define HW_L2_RQSTS_MISSES_EVTNR (0x24)
+#define HW_L2_RQSTS_MISSES_UMASK  (0x3F)
+
+
 /*===========================================================================================
   *             CONFIGURATION REGSITERS' STRUCTURES
   *==========================================================================================*/
@@ -320,13 +331,11 @@ struct counter_table_t {
 
 #if 1
 static struct counter_table_t counter_tbl[] = {
-    {"L2_HITS",         CUSTOM_CTR,     MEM_LOAD_RETIRED_L2_HIT_EVTNR,      MEM_LOAD_RETIRED_L2_HIT_UMASK,  IA32_PERFEVTSEL0_ADDR,  IA32_PMC0,                      0},
-    {"L2_MISSES",       CUSTOM_CTR,     MEM_LOAD_RETIRED_L2_MISS_EVTNR,     MEM_LOAD_RETIRED_L2_MISS_UMASK, IA32_PERFEVTSEL1_ADDR,  IA32_PMC1,                      1},
-//    {"L1_HITS",         CUSTOM_CTR,     MEM_LOAD_RETIRED_L1_HIT_EVTNR,      MEM_LOAD_RETIRED_L1_HIT_UMASK,  IA32_PERFEVTSEL2_ADDR,  IA32_PMC2,                      2},
-//    {"L1_MISSES",       CUSTOM_CTR,     MEM_LOAD_RETIRED_L1_MISS_EVTNR,     MEM_LOAD_RETIRED_L1_MISS_UMASK, IA32_PERFEVTSEL3_ADDR,  IA32_PMC3,                      3},
-//    {"L3_MISSES",       CUSTOM_CTR,     ARCH_LLC_MISS_EVTNR,           ARCH_LLC_MISS_UMASK,         IA32_PERFEVTSEL0_ADDR,  IA32_PMC0,                      0},
-//    {"L3_HITS",         CUSTOM_CTR,     ARCH_LLC_REFERENCE_EVTNR,      ARCH_LLC_REFERENCE_UMASK,    IA32_PERFEVTSEL1_ADDR,  IA32_PMC1,                      1},
-    { NULL,             0x0,            0x0,                           0x0,                         0x0,                    0x0,                            0}
+    {"L2_REFS",         CUSTOM_CTR,     HW_L2_RQSTS_REFERENCES_EVTNR,      HW_L2_RQSTS_REFERENCES_UMASK,    IA32_PERFEVTSEL0_ADDR,  IA32_PMC0,                      0},
+    {"L2_MISSES",       CUSTOM_CTR,     HW_L2_RQSTS_MISSES_EVTNR,          HW_L2_RQSTS_MISSES_UMASK,        IA32_PERFEVTSEL1_ADDR,  IA32_PMC1,                      1},
+    {"L3_REFS",         CUSTOM_CTR,     ARCH_LLC_REFERENCE_EVTNR,          ARCH_LLC_REFERENCE_UMASK,        IA32_PERFEVTSEL2_ADDR,  IA32_PMC2,                      2},
+    {"L3_MISSES",       CUSTOM_CTR,     ARCH_LLC_MISS_EVTNR,               ARCH_LLC_MISS_UMASK,             IA32_PERFEVTSEL3_ADDR,  IA32_PMC3,                      3},
+    { NULL,             0x0,            0x0,                               0x0,                             0x0,                    0x0,                            0}
 };
 
 #else

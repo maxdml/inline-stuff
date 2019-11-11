@@ -16,9 +16,9 @@ namespace bpo = boost::program_options;
 #include "benchmarks.hh"
 
 typedef void (*BenchmarkFunc)(struct ThreadArgs &args);
-static BenchmarkFunc func = &oned_arrays;
-std::vector<uint8_t> cpus = {6}; // 0-indexed
-uint32_t iterations = 100;
+static BenchmarkFunc func = &bm_single_d_array;
+std::vector<uint8_t> cpus = {2}; // 0-indexed
+uint32_t iterations = 10;
 
 void pin_thread(pthread_t thread, u_int16_t cpu) {
     cpu_set_t cpuset;
@@ -135,8 +135,8 @@ void configure_counters(MsrHandle * cpu_msr[],
     }
 }
 
-/** Using this main function for some more testing */
 int main(int argc, char *argv[]) {
+
     std::string log_dir, label;
     bpo::options_description desc{"echo experiment options"};
     desc.add_options()
@@ -176,6 +176,9 @@ int main(int argc, char *argv[]) {
         pin_thread(t->t->native_handle(), cpus[0]);
         threads.push_back(std::move(t));
     }
+    printf("running %u threads\n", threads.size());
+
+    printf("log dir: %s  label: %s\n", log_dir.c_str(), label.c_str());
 
     std::string filepath = log_dir + "/" + label + ".csv";
     FILE *f = fopen(filepath.c_str(), "w");

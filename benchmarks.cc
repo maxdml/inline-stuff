@@ -8,15 +8,49 @@
 
 #include "benchmarks.hh"
 
-#define MAX_ROW     512
-#define MAX_COL     64
-#define NUM_PASSES  6
-
-uint8_t arr[MAX_ROW][MAX_COL] = {0};
-uint8_t arr2[MAX_ROW][MAX_COL] = {0};
-
-void bm_single_array(MsrHandle* cpu_msr)
+void bm_single_d_array(struct ThreadArgs &args)
 {
+    printf("benchmark function for single dimensional array\n");
+    uint64_t *store_start = static_cast<uint64_t *>(malloc((N_CUSTOM_CTR) * sizeof(uint64_t)));
+    uint64_t *store_end = static_cast<uint64_t *>(malloc((N_CUSTOM_CTR) * sizeof(uint64_t)));
+
+    int n = 32768 * 32768; // Moe than size of L2 which is 256K
+
+    /* Fill the array */
+    volatile uint64_t *a = static_cast<uint64_t *>(malloc(sizeof(uint64_t) * n));
+    printf("Filling the array\n");
+    for (int i = 0; i < n; ++i) 
+    {
+        a[i] = i;
+    }
+    printf("array filled\n");
+
+    volatile uint64_t b;
+
+    /* Access it */
+    for (unsigned int i = 0; i < args.iterations; ++i) 
+    {
+
+        printf("running iteration %d\n", i);
+        read_values(args.cpu_msr, store_start);
+        
+        for (int j = 0; j < n; ++j) 
+        {
+            b = a[j];
+            //__asm__ volatile("clflush (%0)" : : "r" ((volatile void *)& a[j]) : "memory");
+        }
+        read_values(args.cpu_msr, store_end);
+        for (int c = 0; counter_tbl[c].name; ++c) 
+        {
+            args.values(c, args.counts) = store_end[c] - store_start[c];
+        }
+        args.counts++;
+    }
+
+    free(store_start);
+    free(store_end);
+    
+#if 0
     if (cpu_msr == NULL)
     {
         printf("handle is NULL\n");
@@ -38,8 +72,10 @@ void bm_single_array(MsrHandle* cpu_msr)
         printf("L2 hits : %lu\n", store_end[0] - store_start[0]);
         printf("L2 misses: %lu\n", store_end[1] - store_start[1]);
     }
+#endif
 }
 
+#if 0
 void bm_multiple_arrays(MsrHandle* cpu_msr)
 {
     if (cpu_msr == NULL)
@@ -68,6 +104,7 @@ void bm_multiple_arrays(MsrHandle* cpu_msr)
         printf("L1 misses: %lu\n", store_end[1] - store_start[1]);
     }
 }
+#endif
 
 void oned_arrays(struct ThreadArgs &args) {
     printf("Starting MB worker %d\n", args.id);
