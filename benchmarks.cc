@@ -19,7 +19,7 @@ void bm_single_d_array(struct ThreadArgs &args)
     /* Fill the array */
     volatile uint64_t *a = static_cast<uint64_t *>(malloc(sizeof(uint64_t) * n));
     printf("Filling the array\n");
-    for (int i = 0; i < n; ++i) 
+    for (uint64_t i = 0; i < n; ++i) 
     {
         a[i] = i;
     }
@@ -46,26 +46,27 @@ void bm_single_d_array(struct ThreadArgs &args)
         args.counts++;
     }
 
+    printf("b = %lu\n", b);
+
     free(store_start);
     free(store_end);
     
 }
 
-#if 0
-uint64_t arr_2d[32768][32768];
-void bm_2d_array(MsrHandle* cpu_msr)
+#if 1
+uint64_t arr_2d[1024][64];
+void bm_2d_array(struct ThreadArgs &args)
 {
     printf("benchmark function for single dimensional array\n");
     uint64_t *store_start = static_cast<uint64_t *>(malloc((N_CUSTOM_CTR) * sizeof(uint64_t)));
     uint64_t *store_end = static_cast<uint64_t *>(malloc((N_CUSTOM_CTR) * sizeof(uint64_t)));
 
-    uint64_t n = 32768 * 32768; // Moe than size of L2 which is 256K
-
     /* Fill the array */
     printf("Filling the array\n");
-    for (int i = 0; i < n; ++i) 
+    for (uint64_t i = 0; i < 1024; ++i) 
     {
-        a[i] = i;
+        for(uint64_t j = 0; j < 64; j++)
+        arr_2d[i][j] = i + j;
     }
     printf("array filled\n");
 
@@ -77,9 +78,10 @@ void bm_2d_array(MsrHandle* cpu_msr)
         printf("running iteration %d\n", i);
         read_values(args.cpu_msr, store_start);
         
-        for (int j = 0; j < n; ++j) 
+        for (uint64_t i = 0; i < 1024; ++i) 
         {
-            b = a[j];
+            for(uint64_t j = 0; j < 64; j++)
+            b = arr_2d[i][j];
             //__asm__ volatile("clflush (%0)" : : "r" ((volatile void *)& a[j]) : "memory");
         }
         read_values(args.cpu_msr, store_end);
@@ -90,34 +92,10 @@ void bm_2d_array(MsrHandle* cpu_msr)
         args.counts++;
     }
 
+    printf("b = %lu\n", b);
     free(store_start);
     free(store_end);
     
-    if (cpu_msr == NULL)
-    {
-        printf("handle is NULL\n");
-        return;
-    }
-    uint8_t c;
-
-    uint64_t store_start[2];
-    uint64_t store_end[2];
-    
-    for (int k = 0; k < NUM_PASSES; k++)
-    {
-        read_values(cpu_msr, store_start);
-        for (unsigned int i = 0 ; i < MAX_ROW; i++)
-            for (unsigned j = 0; j < MAX_COL; j++)
-                c = arr[i][j];
-
-        for (unsigned int i = 0 ; i < MAX_ROW; i++)
-            for (unsigned j = 0; j < MAX_COL; j++)
-                c = arr2[i][j];
-
-        read_values(cpu_msr, store_end);
-        printf("L1 hits : %lu\n", store_end[0] - store_start[0]);
-        printf("L1 misses: %lu\n", store_end[1] - store_start[1]);
-    }
 }
 #endif
 
