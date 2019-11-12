@@ -14,7 +14,7 @@ void bm_single_d_array(struct ThreadArgs &args)
     uint64_t *store_start = static_cast<uint64_t *>(malloc((N_CUSTOM_CTR) * sizeof(uint64_t)));
     uint64_t *store_end = static_cast<uint64_t *>(malloc((N_CUSTOM_CTR) * sizeof(uint64_t)));
 
-    int n = 32768 * 32768; // Moe than size of L2 which is 256K
+    uint64_t n = 32768 * 2; // Moe than size of L2 which is 256K
 
     /* Fill the array */
     volatile uint64_t *a = static_cast<uint64_t *>(malloc(sizeof(uint64_t) * n));
@@ -30,7 +30,50 @@ void bm_single_d_array(struct ThreadArgs &args)
     /* Access it */
     for (unsigned int i = 0; i < args.iterations; ++i) 
     {
+        printf("running iteration %d\n", i);
+        read_values(args.cpu_msr, store_start);
+        
+        for (int j = 0; j < 32768; ++j) 
+        {
+            b = a[j];
+            //__asm__ volatile("clflush (%0)" : : "r" ((volatile void *)& a[j]) : "memory");
+        }
+        read_values(args.cpu_msr, store_end);
+        for (int c = 0; counter_tbl[c].name; ++c) 
+        {
+            args.values(c, args.counts) = store_end[c] - store_start[c];
+        }
+        args.counts++;
+    }
 
+    free(store_start);
+    free(store_end);
+    
+}
+
+#if 0
+uint64_t arr_2d[32768][32768];
+void bm_2d_array(MsrHandle* cpu_msr)
+{
+    printf("benchmark function for single dimensional array\n");
+    uint64_t *store_start = static_cast<uint64_t *>(malloc((N_CUSTOM_CTR) * sizeof(uint64_t)));
+    uint64_t *store_end = static_cast<uint64_t *>(malloc((N_CUSTOM_CTR) * sizeof(uint64_t)));
+
+    uint64_t n = 32768 * 32768; // Moe than size of L2 which is 256K
+
+    /* Fill the array */
+    printf("Filling the array\n");
+    for (int i = 0; i < n; ++i) 
+    {
+        a[i] = i;
+    }
+    printf("array filled\n");
+
+    volatile uint64_t b;
+
+    /* Access it */
+    for (unsigned int i = 0; i < args.iterations; ++i) 
+    {
         printf("running iteration %d\n", i);
         read_values(args.cpu_msr, store_start);
         
@@ -50,34 +93,6 @@ void bm_single_d_array(struct ThreadArgs &args)
     free(store_start);
     free(store_end);
     
-#if 0
-    if (cpu_msr == NULL)
-    {
-        printf("handle is NULL\n");
-        return;
-    }
-    uint8_t c;
-
-    uint64_t store_start[2];
-    uint64_t store_end[2];
-    
-    for (int k = 0; k < 1; k++)
-    {
-        read_values(cpu_msr, store_start);
-        for (unsigned int i = 0 ; i < MAX_ROW; i++)
-            for (unsigned j = 0; j < MAX_COL; j++)
-                c = arr[i][j];
-
-        read_values(cpu_msr, store_end);
-        printf("L2 hits : %lu\n", store_end[0] - store_start[0]);
-        printf("L2 misses: %lu\n", store_end[1] - store_start[1]);
-    }
-#endif
-}
-
-#if 0
-void bm_multiple_arrays(MsrHandle* cpu_msr)
-{
     if (cpu_msr == NULL)
     {
         printf("handle is NULL\n");

@@ -137,12 +137,17 @@ void configure_counters(MsrHandle * cpu_msr[],
 
 int main(int argc, char *argv[]) {
 
+    if (argc < 3)
+    {
+        printf("csv dir and name required\n");
+        exit(EXIT_FAILURE);
+    }
     std::string log_dir, label;
     bpo::options_description desc{"echo experiment options"};
     desc.add_options()
         ("help", "produce help message")
-        ("log-dir,d", bpo::value<std::string>(&log_dir)->default_value("./"), "specify log directory")
-        ("label,l", bpo::value<std::string>(&label)->default_value("mymicrobench"), "specify MB label");
+        ("log-dir,d", bpo::value<std::string>(&log_dir)->default_value("./csv"), "specify log directory")
+        ("label,l", bpo::value<std::string>(&label)->default_value("single_l2_len_full"), "specify MB label");
     bpo::variables_map vm;
     try {
         bpo::parsed_options parsed =
@@ -177,6 +182,9 @@ int main(int argc, char *argv[]) {
         threads.push_back(std::move(t));
     }
     printf("running %u threads\n", threads.size());
+
+    log_dir = std::string(argv[1]);
+    label = std::string(argv[2]);
 
     printf("log dir: %s  label: %s\n", log_dir.c_str(), label.c_str());
 
