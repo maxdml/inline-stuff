@@ -14,4 +14,5 @@ fig, axs = plt.subplots(1, len(cols), squeeze=False, sharey='row', sharex=True, 
 for i, col in enumerate(cols):
         sns.scatterplot(x=df.index, y=col, data=df, ax=axs[0][i], label=col)
 plt.legend()
-plt.show()
+plt.savefig("myplot.pdf")
+#plt.show()
