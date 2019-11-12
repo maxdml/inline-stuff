@@ -99,6 +99,48 @@ void bm_2d_array(struct ThreadArgs &args)
 }
 #endif
 
+void bm_2d_array_non_cont(struct ThreadArgs &args)
+{
+    printf("benchmark function for single dimensional array\n");
+    uint64_t *store_start = static_cast<uint64_t *>(malloc((N_CUSTOM_CTR) * sizeof(uint64_t)));
+    uint64_t *store_end = static_cast<uint64_t *>(malloc((N_CUSTOM_CTR) * sizeof(uint64_t)));
+
+    /* Fill the array */
+    printf("Filling the array\n");
+    for (uint64_t i = 0; i < 1024; ++i) 
+    {
+        for(uint64_t j = 0; j < 64; j++)
+        arr_2d[i][j] = i + j;
+    }
+    printf("array filled\n");
+
+    volatile uint64_t b;
+
+    /* Access it */
+    for (unsigned int i = 0; i < args.iterations; ++i) 
+    {
+        printf("running iteration %d\n", i);
+        read_values(args.cpu_msr, store_start);
+        
+        for (uint64_t j = 0; j < 64; ++j) 
+        {
+            for(uint64_t i = 0; i < 1024; i++)
+            b = arr_2d[i][j];
+            //__asm__ volatile("clflush (%0)" : : "r" ((volatile void *)& a[j]) : "memory");
+        }
+        read_values(args.cpu_msr, store_end);
+        for (int c = 0; counter_tbl[c].name; ++c) 
+        {
+            args.values(c, args.counts) = store_end[c] - store_start[c];
+        }
+        args.counts++;
+    }
+
+    printf("b = %lu\n", b);
+    free(store_start);
+    free(store_end);
+    
+}
 void oned_arrays(struct ThreadArgs &args) {
     printf("Starting MB worker %d\n", args.id);
     uint64_t *store_start = static_cast<uint64_t *>(malloc((N_CUSTOM_CTR + N_FIXED_CTR) * sizeof(uint64_t)));
