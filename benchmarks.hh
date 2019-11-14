@@ -97,6 +97,7 @@ static void read_values(MsrHandle *cpu_msr, uint64_t *store) {
 /***********************
  * Benchmark functions *
  ***********************/
+void bm_cache_line_test(struct ThreadArgs &args);
 void bm_single_d_array(struct ThreadArgs &args);
 void bm_2d_array(struct ThreadArgs &args);
 void cache_work(struct ThreadArgs &args);
