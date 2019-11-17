@@ -8,6 +8,8 @@
 
 #include "benchmarks.hh"
 
+//#define MULTITHREADED_HALF_ARRAY_READ
+
 uint64_t shared_array[32768];
 
 void bm_single_d_array_multithreaded(struct ThreadArgs &args)
@@ -25,7 +27,8 @@ void bm_single_d_array_multithreaded(struct ThreadArgs &args)
     {
         printf("running iteration %d\n", i);
         read_values(args.cpu_msr, store_start);
-        
+  
+#ifdef MULTITHREADED_HALF_ARRAY_READ
         if (args.id == 0)
         {
             j = 0;
@@ -37,6 +40,10 @@ void bm_single_d_array_multithreaded(struct ThreadArgs &args)
             j_last = 32768;
 
         }
+#else
+        j = 0;
+        j_last = sizeof(shared_array)/ sizeof(uint64_t);
+#endif
 
         for (; j < j_last; ++j) 
         {
