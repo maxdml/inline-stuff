@@ -8,6 +8,53 @@
 
 #include "benchmarks.hh"
 
+uint64_t shared_array[32768];
+
+void bm_single_d_array_multithreaded(struct ThreadArgs &args)
+{
+    uint64_t *store_start = static_cast<uint64_t *>(malloc((N_CUSTOM_CTR) * sizeof(uint64_t)));
+    uint64_t *store_end = static_cast<uint64_t *>(malloc((N_CUSTOM_CTR) * sizeof(uint64_t)));
+
+    uint64_t b;
+    for(int i = 0; i < 32768; i++)
+        shared_array[i] = i;
+
+    int j, j_last;
+
+    for (unsigned int i = 0; i < args.iterations; ++i) 
+    {
+        printf("running iteration %d\n", i);
+        read_values(args.cpu_msr, store_start);
+        
+        if (args.id == 0)
+        {
+            j = 0;
+            j_last = 32768 / 2;
+        }
+        else if (args.id == 1)
+        {
+            j = 32768/2 + 1;
+            j_last = 32768;
+
+        }
+
+        for (; j < j_last; ++j) 
+        {
+            b = shared_array[j];
+            //__asm__ volatile("clflush (%0)" : : "r" ((volatile void *)& a[j]) : "memory");
+        }
+        read_values(args.cpu_msr, store_end);
+        for (int c = 0; counter_tbl[c].name; ++c) 
+        {
+            args.values(c, args.counts) = store_end[c] - store_start[c];
+        }
+        args.counts++;
+    }
+    free(store_start);
+    free(store_end);
+    
+}
+
 void bm_cache_line_test(struct ThreadArgs &args)
 {
     uint8_t arr[8];
