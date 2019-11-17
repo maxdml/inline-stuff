@@ -10,13 +10,13 @@
 
 void bm_cache_line_test(struct ThreadArgs &args)
 {
-    uint8_t arr[64];
+    uint8_t arr[32];
     uint8_t b;
 
     uint64_t *store_start = static_cast<uint64_t *>(malloc((N_CUSTOM_CTR) * sizeof(uint64_t)));
     uint64_t *store_end = static_cast<uint64_t *>(malloc((N_CUSTOM_CTR) * sizeof(uint64_t)));
 
-    for(int i = 0; i < 64; i++)
+    for(int i = 0; i < 32; i++)
         arr[i] = i;
 
     for (unsigned int i = 0; i < args.iterations; ++i) 
@@ -24,7 +24,7 @@ void bm_cache_line_test(struct ThreadArgs &args)
         printf("running iteration %d\n", i);
         read_values(args.cpu_msr, store_start);
         
-        for (int j = 0; j < 64; ++j) 
+        for (int j = 0; j < 32; ++j) 
         {
             b = arr[j];
             //__asm__ volatile("clflush (%0)" : : "r" ((volatile void *)& a[j]) : "memory");
