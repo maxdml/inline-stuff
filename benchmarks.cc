@@ -46,7 +46,7 @@ void bm_single_d_array(struct ThreadArgs &args)
     uint64_t *store_start = static_cast<uint64_t *>(malloc((N_CUSTOM_CTR) * sizeof(uint64_t)));
     uint64_t *store_end = static_cast<uint64_t *>(malloc((N_CUSTOM_CTR) * sizeof(uint64_t)));
 
-    uint64_t n = 32768 * 2; // Moe than size of L2 which is 256K
+    uint64_t n = 16384; // Moe than size of L2 which is 256K
 
     /* Fill the array */
     volatile uint64_t *a = static_cast<uint64_t *>(malloc(sizeof(uint64_t) * n));
@@ -65,7 +65,7 @@ void bm_single_d_array(struct ThreadArgs &args)
         printf("running iteration %d\n", i);
         read_values(args.cpu_msr, store_start);
         
-        for (int j = 0; j < 32768; ++j) 
+        for (int j = 0; j < n; ++j) 
         {
             b = a[j];
             //__asm__ volatile("clflush (%0)" : : "r" ((volatile void *)& a[j]) : "memory");
