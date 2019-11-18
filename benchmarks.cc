@@ -140,7 +140,7 @@ void bm_single_d_array(struct ThreadArgs &args)
 }
 
 #if 1
-uint64_t arr_2d[1024][64];
+uint64_t arr_2d[1024][16];
 void bm_2d_array(struct ThreadArgs &args)
 {
     printf("benchmark function for single dimensional array\n");
@@ -151,7 +151,7 @@ void bm_2d_array(struct ThreadArgs &args)
     printf("Filling the array\n");
     for (uint64_t i = 0; i < 1024; ++i) 
     {
-        for(uint64_t j = 0; j < 64; j++)
+        for(uint64_t j = 0; j < 16; j++)
         arr_2d[i][j] = i + j;
     }
     printf("array filled\n");
@@ -166,7 +166,7 @@ void bm_2d_array(struct ThreadArgs &args)
         
         for (uint64_t i = 0; i < 1024; ++i) 
         {
-            for(uint64_t j = 0; j < 64; j++)
+            for(uint64_t j = 0; j < 16; j++)
             b = arr_2d[i][j];
             //__asm__ volatile("clflush (%0)" : : "r" ((volatile void *)& a[j]) : "memory");
         }
@@ -195,7 +195,7 @@ void bm_2d_array_non_cont(struct ThreadArgs &args)
     printf("Filling the array\n");
     for (uint64_t i = 0; i < 1024; ++i) 
     {
-        for(uint64_t j = 0; j < 64; j++)
+        for(uint64_t j = 0; j < 16; j++)
         arr_2d[i][j] = i + j;
     }
     printf("array filled\n");
@@ -208,7 +208,7 @@ void bm_2d_array_non_cont(struct ThreadArgs &args)
         printf("running iteration %d\n", i);
         read_values(args.cpu_msr, store_start);
         
-        for (uint64_t j = 0; j < 64; ++j) 
+        for (uint64_t j = 0; j < 16; ++j) 
         {
             for(uint64_t i = 0; i < 1024; i++)
             b = arr_2d[i][j];

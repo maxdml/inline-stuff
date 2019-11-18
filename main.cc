@@ -16,7 +16,7 @@ namespace bpo = boost::program_options;
 #include "benchmarks.hh"
 
 typedef void (*BenchmarkFunc)(struct ThreadArgs &args);
-static BenchmarkFunc func = &bm_single_d_array_multithreaded;
+static BenchmarkFunc func = &bm_2d_array_non_cont;
 std::vector<uint8_t> cpus = {2, 2}; // 0-indexed
 uint32_t iterations = 10;
 

@@ -101,6 +101,7 @@ void bm_single_d_array_multithreaded(struct ThreadArgs &args);
 void bm_cache_line_test(struct ThreadArgs &args);
 void bm_single_d_array(struct ThreadArgs &args);
 void bm_2d_array(struct ThreadArgs &args);
+void bm_2d_array_non_cont(struct ThreadArgs &args);
 void cache_work(struct ThreadArgs &args);
 void file_work(struct ThreadArgs &args);
 void oned_arrays(struct ThreadArgs &args);
