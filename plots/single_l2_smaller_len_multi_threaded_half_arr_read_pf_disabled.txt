@@ -1,0 +1,14 @@
+Test on L2 cache:
+L2 specification:
+256KB, 64 B cache line, 8-way associative, 512 sets
+
+Array type: Single-dimensional
+Elements: 32768
+Test type: Array shared between two threads, one reading first half if the array, second reading second half of the array
+Data type: uint64_t
+Total size of array: 256 KB (Equal to size of L2 cache)
+L2 Prefetching: disabled
+
+All the array elements were accessed sequentially for 10 iterations to see how many L2 cache references and misses were recorded.
+According to the result, there were 2048 references for each iteration of both the threads, which is as expected because the entire cache line is read in one go therby reading 8 elements and there are a total of 16384 elements to be read by each thread, so there should be 16384 / 8 = 2048 references. From the result, we cannot say much about the misses. For the first iteration, there are almost s many misses as there are references because there in nothing in L2 initially. After first iteration, no of misses are mostly zero which is as expected but sometimes it is more than 0 which might be because of other data L2 is holdingi from some other programs or some other data from the same program, so it has to evict some of the entries and reload them when they are used later.
+
