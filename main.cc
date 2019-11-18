@@ -1,6 +1,7 @@
 #include <vector>
 #include <cstdint>
 #include <iostream>
+#include <iomanip>
 #include <thread>
 #include <pthread.h>
 #include <errno.h>
@@ -14,6 +15,13 @@ namespace bpo = boost::program_options;
 
 #include "msr.hh"
 #include "benchmarks.hh"
+
+
+/*
+ * Potentially helpful links
+ * - HW prefetcher MSR config: https://software.intel.com/en-us/articles/disclosure-of-hw-prefetcher-control-on-some-intel-processors (I think our skylakes have 4 bits)
+ *
+ */
 
 typedef void (*BenchmarkFunc)(struct ThreadArgs &args);
 static BenchmarkFunc func = &bm_2d_array_non_cont;
@@ -102,6 +110,7 @@ void configure_counters(MsrHandle * cpu_msr[],
                     break;
                 }
                 if (counter_tbl[c].ctr_type == CUSTOM_CTR) {
+                    std::cout << "Setting up event " << counter_tbl[c].name << std::endl;
                     EventSelectRegister evt_reg;
                     res = cpu_msr[i]->read(counter_tbl[c].cfg_reg, &evt_reg.value);
                     assert (res >= 0);
@@ -129,6 +138,7 @@ void configure_counters(MsrHandle * cpu_msr[],
                 }
             }
 
+            std::cout << "Enabling counters with mask " << std::hex << value << std::endl;
             res = cpu_msr[i]->write(IA32_CR_PERF_GLOBAL_CTRL, value);
             assert(res >= 0);
         }
@@ -136,7 +146,6 @@ void configure_counters(MsrHandle * cpu_msr[],
 }
 
 int main(int argc, char *argv[]) {
-
     if (argc < 3)
     {
         printf("csv dir and name required\n");
@@ -182,9 +191,6 @@ int main(int argc, char *argv[]) {
         threads.push_back(std::move(t));
     }
     printf("running %u threads\n", threads.size());
-
-    log_dir = std::string(argv[1]);
-    label = std::string(argv[2]);
 
     printf("log dir: %s  label: %s\n", log_dir.c_str(), label.c_str());
 
