@@ -7,56 +7,70 @@
 #include <assert.h>
 
 #include <iostream>
+#include <atomic>
 
 #include "benchmarks.hh"
 
-//#define MULTITHREADED_HALF_ARRAY_READ
+//#define MULTITHREADED_HALF_ARRAY_READ 1
 
-uint64_t shared_array[32768];
+uint64_t n = L2_SIZE * .9 / sizeof(uint64_t);
+volatile uint64_t *shared_array;
+std::atomic<bool> sa_flag = false;
 
 void bm_single_d_array_multithreaded(struct ThreadArgs &args)
 {
     uint64_t *store_start = static_cast<uint64_t *>(malloc((N_CUSTOM_CTR) * sizeof(uint64_t)));
     uint64_t *store_end = static_cast<uint64_t *>(malloc((N_CUSTOM_CTR) * sizeof(uint64_t)));
 
-    uint64_t b;
-    for(int i = 0; i < 32768; i++)
-        shared_array[i] = i;
+    if (sa_flag == false) {
+        sa_flag = true;
+        std::cout << "Thread #" << args.id << " setting shared array" << std::endl;
+        shared_array = static_cast<uint64_t*>(malloc(L2_SIZE));
+        for (uint64_t i = 0; i < n; ++i)
+            shared_array[i] = i;
+    }
 
-    int j, j_last;
+    clear_l1();
+    clear_l2();
 
-    for (unsigned int i = 0; i < args.iterations; ++i) 
-    {
-        printf("running iteration %d\n", i);
-        read_values(args.cpu_msr, store_start);
-  
+    unsigned int j, j_last;
+
 #ifdef MULTITHREADED_HALF_ARRAY_READ
-        if (args.id == 0)
-        {
-            j = 0;
-            j_last = 32768 / 2;
-        }
-        else if (args.id == 1)
-        {
-            j = 32768/2 + 1;
-            j_last = 32768;
-
-        }
-#else
+    if (args.id == 0)
+    {
         j = 0;
-        j_last = sizeof(shared_array)/ sizeof(uint64_t);
+        j_last = n/2;
+    }
+    else if (args.id == 1)
+    {
+        j = n/2 + 1;
+        j_last = n;
+
+    }
+#else
+    j = 0;
+    j_last = n;
 #endif
 
-        for (; j < j_last; ++j) 
+    volatile uint64_t b;
+    std::cout << "Thread #" << args.id << " accessing indices ";
+    std::cout << std::dec << j << " to " << std::dec << j_last << std::endl;
+    for (unsigned int i = 0; i < args.iterations; ++i)
+    {
+        //printf("running iteration %d\n", i);
+        read_values(args.cpu_msr, store_start);
+        for (uint64_t jj = j; jj < j_last; ++jj)
         {
-            b = shared_array[j];
+            b = shared_array[jj];
             //__asm__ volatile("clflush (%0)" : : "r" ((volatile void *)& a[j]) : "memory");
         }
         read_values(args.cpu_msr, store_end);
-        for (int c = 0; counter_tbl[c].name; ++c) 
+        for (int c = 0; counter_tbl[c].name; ++c)
         {
             args.values(c, args.counts) = store_end[c] - store_start[c];
+            //std::cout << counter_tbl[c].name << ": " << std::dec << args.values(c, args.counts) << std::endl;
         }
+        fake_out_optimizations((uint64_t*)shared_array, L2_SIZE);
         args.counts++;
     }
     free(store_start);
@@ -93,6 +107,10 @@ void bm_cache_line_test(struct ThreadArgs &args)
             args.values(c, args.counts) = store_end[c] - store_start[c];
         }
         args.counts++;
+        fake_out_optimizations((uint64_t *)arr, (long) n/8);
+        for (int j = 64; j < n; j++)
+            arr[j] = i*j;
+        fake_out_optimizations((uint64_t *)arr, (long) n/8);
     }
     free(store_start);
     free(store_end);
@@ -104,15 +122,17 @@ void bm_single_d_array(struct ThreadArgs &args)
     uint64_t *store_start = static_cast<uint64_t *>(malloc((N_CUSTOM_CTR) * sizeof(uint64_t)));
     uint64_t *store_end = static_cast<uint64_t *>(malloc((N_CUSTOM_CTR) * sizeof(uint64_t)));
 
+    std::cout << "Accessing 0x" << n << " elements" << std::endl;
     /* Fill the array */
-    volatile uint64_t *a = static_cast<uint64_t *>(malloc(sizeof(uint64_t) * n));
+    volatile uint64_t *a = static_cast<uint64_t *>(malloc(L2_SIZE));
     printf("Filling the array\n");
     for (uint64_t i = 0; i < n; ++i)
     {
         a[i] = i;
-        __asm__ volatile("clflush (%0)" : : "r" ((volatile void *)& a[i]) : "memory");
+        //__asm__ volatile("clflush (%0)" : : "r" ((volatile void *)& a[i]) : "memory");
     }
     printf("array filled\n");
+    clear_l2();
 
     volatile uint64_t b;
 
@@ -122,7 +142,7 @@ void bm_single_d_array(struct ThreadArgs &args)
         printf("running iteration %d\n", i);
         read_values(args.cpu_msr, store_start);
 
-        for (uint64_t j = 0; j < n/2; ++j)
+        for (uint64_t j = 0; j < n; ++j)
         {
             b = a[j];
             //__asm__ volatile("clflush (%0)" : : "r" ((volatile void *)& a[j]) : "memory");

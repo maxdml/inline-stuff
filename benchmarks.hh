@@ -9,6 +9,7 @@
 
 #define L1_SIZE 32768
 #define L2_SIZE 1048576
+#define L3_SIZE 14417920
 
 /*********************
  * Utility functions *
@@ -43,9 +44,7 @@ static inline uint64_t rdtsc_end() {
 }
 
 static inline void srlz() {
-    asm volatile (
-        "CPUID\n\t"
-    );
+    asm volatile ("CPUID\n\t");
 }
 
 static inline void fake_out_optimizations(uint64_t *x, long bytes) {
@@ -64,6 +63,11 @@ static inline void clear_l1() {
 
 static inline void clear_l2() {
     char dummy[L2_SIZE];
+    memset(dummy, 0, sizeof dummy);
+}
+
+static inline void clear_l3() {
+    char dummy[L3_SIZE];
     memset(dummy, 0, sizeof dummy);
 }
 

@@ -179,7 +179,7 @@ bool get_cache_params_index(int index)
 
     if (cache.eax.eax_bit_values.cache_type == 0)
         return false;
-    
+
     printf("cache level: %d\n", cache.eax.eax_bit_values.level);
     if (cache.eax.eax_bit_values.cache_type == 1)
         printf("Data cache\n");
@@ -192,7 +192,7 @@ bool get_cache_params_index(int index)
     printf("cache line size: %d\n", cache.ebx.ebx_bit_values.cache_line_size + 1);
     printf("ways of associativity: %d\n", cache.ebx.ebx_bit_values.ways + 1);
     printf("no. of sets: %d\n", cache.ecx.ecx_bit_values.num_sets + 1);
-    
+
     unsigned long long total_size;
     total_size = (cache.ebx.ebx_bit_values.cache_line_size + 1)*
         (cache.ecx.ecx_bit_values.num_sets + 1)*

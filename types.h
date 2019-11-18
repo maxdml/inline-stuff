@@ -345,19 +345,15 @@ static struct counter_table_t counter_tbl[] = {
     {"L1_HITS",         CUSTOM_CTR,     MEM_LOAD_RETIRED_L1_HIT_EVTNR,      MEM_LOAD_RETIRED_L1_HIT_UMASK,  IA32_PERFEVTSEL0_ADDR,  IA32_PMC0,                       0},
     {"L1_MISSES",       CUSTOM_CTR,     MEM_LOAD_RETIRED_L1_MISS_EVTNR,     MEM_LOAD_RETIRED_L1_MISS_UMASK, IA32_PERFEVTSEL1_ADDR,  IA32_PMC1,                       1},
     */
-    {"L2_HITS",         CUSTOM_CTR,     L2_RQSTS_MISSES_EVTNR,              L2_RQSTS_MISSES_UMASK,          IA32_PERFEVTSEL2_ADDR,  IA32_PMC2,                       2},
-    {"L2_MISSES",       CUSTOM_CTR,     L2_RQSTS_REFERENCES_EVTNR,          L2_RQSTS_REFERENCES_UMASK,      IA32_PERFEVTSEL3_ADDR,  IA32_PMC3,                       3},
-    /*
-    {"L2_HITS",         CUSTOM_CTR,     MEM_LOAD_RETIRED_L2_HIT_EVTNR,      MEM_LOAD_RETIRED_L2_HIT_UMASK,  IA32_PERFEVTSEL2_ADDR,  IA32_PMC2,                       2},
-    {"L2_MISSES",       CUSTOM_CTR,     MEM_LOAD_RETIRED_L2_MISS_EVTNR,     MEM_LOAD_RETIRED_L2_MISS_UMASK, IA32_PERFEVTSEL3_ADDR,  IA32_PMC3,                       3},
-    */
-    {"L3_HITS",         CUSTOM_CTR,     ARCH_LLC_REFERENCE_EVTNR,           ARCH_LLC_REFERENCE_UMASK,       IA32_PERFEVTSEL4_ADDR,  IA32_PMC4,                      4},
-    {"L3_MISSES",       CUSTOM_CTR,     ARCH_LLC_MISS_EVTNR,                ARCH_LLC_MISS_UMASK,            IA32_PERFEVTSEL5_ADDR,  IA32_PMC5,                      5},
+    {"L2_LOAD_HITS",    CUSTOM_CTR,     MEM_LOAD_RETIRED_L2_HIT_EVTNR,      MEM_LOAD_RETIRED_L2_HIT_UMASK,  IA32_PERFEVTSEL0_ADDR,  IA32_PMC0,                       0},
+    {"L2_LOAD_MISSES",  CUSTOM_CTR,     MEM_LOAD_RETIRED_L2_MISS_EVTNR,     MEM_LOAD_RETIRED_L2_MISS_UMASK, IA32_PERFEVTSEL1_ADDR,  IA32_PMC1,                       1},
+    {"L2_REFS",         CUSTOM_CTR,     L2_RQSTS_REFERENCES_EVTNR,          L2_RQSTS_REFERENCES_UMASK,      IA32_PERFEVTSEL2_ADDR,  IA32_PMC2,                       2},
+    {"L2_MISSES",       CUSTOM_CTR,     L2_RQSTS_MISSES_EVTNR,              L2_RQSTS_MISSES_UMASK,          IA32_PERFEVTSEL3_ADDR,  IA32_PMC3,                       3},
+    {"L3_HITS",         CUSTOM_CTR,     ARCH_LLC_REFERENCE_EVTNR,           ARCH_LLC_REFERENCE_UMASK,       IA32_PERFEVTSEL4_ADDR,  IA32_PMC4,                       4},
+    {"L3_MISSES",       CUSTOM_CTR,     ARCH_LLC_MISS_EVTNR,                ARCH_LLC_MISS_UMASK,            IA32_PERFEVTSEL5_ADDR,  IA32_PMC5,                       5},
     /*
     {"L3_HITS",         CUSTOM_CTR,     MEM_LOAD_RETIRED_L3_HIT_EVTNR,      MEM_LOAD_RETIRED_L3_HIT_UMASK,  IA32_PERFEVTSEL4_ADDR,  IA32_PMC4,                       4},
     {"L3_MISSES",       CUSTOM_CTR,     MEM_LOAD_RETIRED_L3_MISS_EVTNR,     MEM_LOAD_RETIRED_L3_MISS_UMASK, IA32_PERFEVTSEL5_ADDR,  IA32_PMC5,                       5},
-    */
-    /*
     {"CPU_CYCLES",      FIXED_CTR,      0x0,                                0x0,                            IA32_CR_FIXED_CTR_CTRL, CPU_CLK_UNHALTED_THREAD_ADDR,    0x0},
     {"INSN_RETIRED",    FIXED_CTR,      0x0,                                0x0,                            IA32_CR_FIXED_CTR_CTRL, INST_RETIRED_ANY_ADDR,           0x0},
     */

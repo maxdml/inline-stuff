@@ -62,18 +62,7 @@ void configure_counters(MsrHandle * cpu_msr[],
         /* Disable fixed registers */
         FixedEventControlRegister ctrl_reg;
         ctrl_reg.value = 0xffffffffffffffff;
-        cpu_msr[i]->read(IA32_CR_FIXED_CTR_CTRL, &ctrl_reg.value);
-        if ((ctrl_reg.fields.os0 ||
-             ctrl_reg.fields.usr0 ||
-             ctrl_reg.fields.enable_pmi0 ||
-             ctrl_reg.fields.os1 ||
-             ctrl_reg.fields.usr1 ||
-             ctrl_reg.fields.enable_pmi1 ||
-             ctrl_reg.fields.os2 ||
-             ctrl_reg.fields.usr2 ||
-             ctrl_reg.fields.enable_pmi2)
-            != 0)
-            cpu_msr[i]->write(IA32_CR_FIXED_CTR_CTRL, 0);
+        cpu_msr[i]->write(IA32_CR_FIXED_CTR_CTRL, 0);
 
         if (set) {
             std::cout << "Configuring counters..." << std::endl;
@@ -187,7 +176,7 @@ int main(int argc, char *argv[]) {
         t->args.cpu_msr = cpu_msr[i];
         t->args.id = i;
         t->t = new std::thread(func, std::ref(t->args));
-        pin_thread(t->t->native_handle(), cpus[0]);
+        pin_thread(t->t->native_handle(), cpus[i]);
         threads.push_back(std::move(t));
     }
     printf("running %u threads\n", threads.size());
