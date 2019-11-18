@@ -2,9 +2,11 @@
 #include <string.h>
 #include <errno.h>
 #include <pthread.h>
-#include <iostream>
 #include <stdint.h>
 #include <unistd.h>
+#include <assert.h>
+
+#include <iostream>
 
 #include "benchmarks.hh"
 
@@ -59,32 +61,34 @@ void bm_single_d_array_multithreaded(struct ThreadArgs &args)
     }
     free(store_start);
     free(store_end);
-    
 }
 
 void bm_cache_line_test(struct ThreadArgs &args)
 {
-    uint8_t arr[8];
+    int n = L2_SIZE;
     uint8_t b;
 
     uint64_t *store_start = static_cast<uint64_t *>(malloc((N_CUSTOM_CTR) * sizeof(uint64_t)));
     uint64_t *store_end = static_cast<uint64_t *>(malloc((N_CUSTOM_CTR) * sizeof(uint64_t)));
 
-    for(int i = 0; i < 8; i++)
+    volatile uint8_t *arr = static_cast<uint8_t *>(malloc(L2_SIZE));
+    for (int i = 0; i < n; i++) // we can fit L2_SIZE / sizeof(uint8_t) = L2_SIZE elements in L2
         arr[i] = i;
 
-    for (unsigned int i = 0; i < args.iterations; ++i) 
+    clear_l2();
+
+    for (unsigned int i = 0; i < args.iterations; ++i)
     {
         printf("running iteration %d\n", i);
         read_values(args.cpu_msr, store_start);
-        
-        for (int j = 0; j < 8; ++j) 
+
+        for (int j = 0; j < 64; ++j)
         {
             b = arr[j];
             //__asm__ volatile("clflush (%0)" : : "r" ((volatile void *)& a[j]) : "memory");
         }
         read_values(args.cpu_msr, store_end);
-        for (int c = 0; counter_tbl[c].name; ++c) 
+        for (int c = 0; counter_tbl[c].name; ++c)
         {
             args.values(c, args.counts) = store_end[c] - store_start[c];
         }
@@ -100,35 +104,35 @@ void bm_single_d_array(struct ThreadArgs &args)
     uint64_t *store_start = static_cast<uint64_t *>(malloc((N_CUSTOM_CTR) * sizeof(uint64_t)));
     uint64_t *store_end = static_cast<uint64_t *>(malloc((N_CUSTOM_CTR) * sizeof(uint64_t)));
 
-    uint64_t n = 16384; // Moe than size of L2 which is 256K
-
     /* Fill the array */
     volatile uint64_t *a = static_cast<uint64_t *>(malloc(sizeof(uint64_t) * n));
     printf("Filling the array\n");
-    for (uint64_t i = 0; i < n; ++i) 
+    for (uint64_t i = 0; i < n; ++i)
     {
         a[i] = i;
+        __asm__ volatile("clflush (%0)" : : "r" ((volatile void *)& a[i]) : "memory");
     }
     printf("array filled\n");
 
     volatile uint64_t b;
 
     /* Access it */
-    for (unsigned int i = 0; i < args.iterations; ++i) 
+    for (unsigned int i = 0; i < args.iterations; ++i)
     {
         printf("running iteration %d\n", i);
         read_values(args.cpu_msr, store_start);
-        
-        for (int j = 0; j < n; ++j) 
+
+        for (uint64_t j = 0; j < n/2; ++j)
         {
             b = a[j];
             //__asm__ volatile("clflush (%0)" : : "r" ((volatile void *)& a[j]) : "memory");
         }
         read_values(args.cpu_msr, store_end);
-        for (int c = 0; counter_tbl[c].name; ++c) 
+        for (int c = 0; counter_tbl[c].name; ++c)
         {
             args.values(c, args.counts) = store_end[c] - store_start[c];
         }
+        fake_out_optimizations((uint64_t*)a, sizeof(uint64_t));
         args.counts++;
     }
 
@@ -136,7 +140,6 @@ void bm_single_d_array(struct ThreadArgs &args)
 
     free(store_start);
     free(store_end);
-    
 }
 
 #if 1
@@ -225,34 +228,47 @@ void bm_2d_array_non_cont(struct ThreadArgs &args)
     printf("b = %lu\n", b);
     free(store_start);
     free(store_end);
-    
 }
+/**
+ * 32KB = 32768B => 4096 * 8 uint64_t
+ */
 void oned_arrays(struct ThreadArgs &args) {
     printf("Starting MB worker %d\n", args.id);
     uint64_t *store_start = static_cast<uint64_t *>(malloc((N_CUSTOM_CTR + N_FIXED_CTR) * sizeof(uint64_t)));
     uint64_t *store_end = static_cast<uint64_t *>(malloc((N_CUSTOM_CTR + N_FIXED_CTR) * sizeof(uint64_t)));
 
-    int n = 4096; // 512 * 8
-
-    /* Fill the array */
-    volatile uint64_t *a = static_cast<uint64_t *>(malloc(sizeof(uint64_t) * n));
-    for (int i = 0; i < n; ++i) {
+    /* Fill the array and the cache */
+    volatile uint64_t *a = static_cast<uint64_t *>(malloc(L2_SIZE));
+    for (int i = 0; i < L2_SIZE; ++i) {
         a[i] = xorshift128plus(mat_rng) >> 11;
+        /* Flush the data we just loaded. We could do that every 8 i (clflush is for a line) */
+        __asm__ volatile("mfence; clflush (%0)" : : "r" ((volatile void *)& a[i]) : "memory");
     }
+    //__builtin___clear_cache((void *)a, (void *) (a+(n * sizeof(uint64_t))+1));
 
-    volatile uint64_t *b = static_cast<uint64_t *>(malloc(sizeof(uint64_t) * n));
+    int n = 1;
+    //volatile uint64_t *b = static_cast<uint64_t *>(malloc(sizeof(uint64_t) * n));
+    uint64_t c = 0;
     /* Access it */
     for (unsigned int i = 0; i < args.iterations; ++i) {
+        srlz();
         read_values(args.cpu_msr, store_start);
+        /* 2n loads */
+        /*
         for (int j = 0; j < n; ++j) {
-            b[j] = a[j];
-            //__asm__ volatile("clflush (%0)" : : "r" ((volatile void *)& a[j]) : "memory");
+            //b[j] = a[j];
+            c = a[j];
+            //__asm__ volatile("clflush (%0)" : : "r" ((volatile void *)& c) : "memory");
+            fake_out_optimizations(&c, sizeof(uint64_t));
         }
+        */
         read_values(args.cpu_msr, store_end);
+        srlz();
         for (int c = 0; counter_tbl[c].name; ++c) {
             args.values(c, args.counts) = store_end[c] - store_start[c];
         }
         args.counts++;
+        //fake_out_optimizations((uint64_t *)b, sizeof(uint64_t) * n);
     }
 
     free(store_start);

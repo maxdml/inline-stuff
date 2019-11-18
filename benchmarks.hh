@@ -1,14 +1,19 @@
 #include <thread>
 
+#include <fcntl.h>
 #include "msr.hh"
 
 #define N_FIXED_CTR 0
-#define N_CUSTOM_CTR 4
+#define N_CUSTOM_CTR 6
 #define MAX_PTS 50000
+
+#define L1_SIZE 32768
+#define L2_SIZE 1048576
 
 /*********************
  * Utility functions *
  *********************/
+
 /**
  * Serialize instructions before RDTSC, then gather ellapsed cycles
  */
@@ -35,6 +40,31 @@ static inline uint64_t rdtsc_end() {
         "CPUID\n\t": "=r" (cycles_high), "=r" (cycles_low):: "%rax", "%rbx", "%rcx", "%rdx"
     );
     return (((uint64_t)cycles_high << 32) | cycles_low);
+}
+
+static inline void srlz() {
+    asm volatile (
+        "CPUID\n\t"
+    );
+}
+
+static inline void fake_out_optimizations(uint64_t *x, long bytes) {
+    static long fd = -1;
+
+    if (fd == -1) {
+        assert(fd = open("/dev/null", O_WRONLY));
+    }
+    assert(write(fd, (void *)x, bytes));
+}
+
+static inline void clear_l1() {
+    char dummy[L1_SIZE];
+    memset(dummy, 0, sizeof dummy);
+}
+
+static inline void clear_l2() {
+    char dummy[L2_SIZE];
+    memset(dummy, 0, sizeof dummy);
 }
 
 static uint64_t mat_rng[2] = {11ULL, 1181783497276652981ULL};
@@ -86,7 +116,9 @@ class BenchmarkThread {
         }
 };
 
-static void read_values(MsrHandle *cpu_msr, uint64_t *store) {
+/* cpu_msr->read(counter_tbl[x].pmc, &store[x]) seems to be 28 L1 load hits
+ * 2 counters through the loop: 63 */
+static inline void read_values(MsrHandle *cpu_msr, uint64_t *store) {
     for (int i = 0; counter_tbl[i].name; ++i) {
         //printf("Reading counter %d from %x\n", i, counter_tbl[i].pmc);
         cpu_msr->read(counter_tbl[i].pmc, &store[i]);
