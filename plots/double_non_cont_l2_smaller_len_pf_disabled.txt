@@ -8,4 +8,10 @@ Data type: uint64_t
 Total size of array: 128 KB (Half the size of L2 cache)
 L2 Prefetching: disabled
 
-All the array elements were accessed column wise for 10 iterations to see how many L2 cache references and misses were recorded.
+No. of references:
+
+The elements are accessed column wise. There are 1024 rows and 16 columns. So, for each iteration, first 1st element of row 1 is accessed, then 1st element of row 2 is accessed and so on. So, it loads 1024 elements total from the rows first, and then it goes on and accesses 2nd element of each row. So, it should have a total of 16384 references which is the same as the no. of elements which are accessed. This i also what the results show. So, the main difference between having row-wise and column-wise(non-contnuous) access is that in row-wise, when 1 cache line is filled, it does the work for a total of 8 elements because one cache line can accomodate 8 elements of uint64_t. So, the total no of references in that case would be 16384/8 = 2048.  
+
+No. of misses:
+
+For the column wise access, there should be 2048 misses in total for the first iteration and 0 for rest of the iterations. 2048 because we have 16 columns which means 2 cache lines each in 1024 sets(an example), so there will be 1 miss in each cache line, therefore 2048. But due to some other things also which might get loaded in L2, the no of misses in subsequent iterations is not always 0. The no of misses are same in the case of continuous (row-wise) which is as expected.  
