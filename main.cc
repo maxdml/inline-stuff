@@ -24,9 +24,9 @@ namespace bpo = boost::program_options;
  */
 
 typedef void (*BenchmarkFunc)(struct ThreadArgs &args);
-static BenchmarkFunc func = &bm_2d_array_non_cont;
-std::vector<uint8_t> cpus = {2, 2}; // 0-indexed
-uint32_t iterations = 10;
+static BenchmarkFunc func = &bm_single_d_array_multithreaded;
+std::vector<uint8_t> cpus = {2, 3}; // 0-indexed
+uint32_t iterations = 2;
 
 void pin_thread(pthread_t thread, u_int16_t cpu) {
     cpu_set_t cpuset;

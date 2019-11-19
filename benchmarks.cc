@@ -13,7 +13,7 @@
 
 //#define MULTITHREADED_HALF_ARRAY_READ 1
 
-uint64_t n = L2_SIZE * .9 / sizeof(uint64_t);
+uint64_t n = L2_SIZE / sizeof(uint64_t);
 volatile uint64_t *shared_array;
 std::atomic<bool> sa_flag = false;
 
@@ -28,35 +28,37 @@ void bm_single_d_array_multithreaded(struct ThreadArgs &args)
         shared_array = static_cast<uint64_t*>(malloc(L2_SIZE));
         for (uint64_t i = 0; i < n; ++i)
             shared_array[i] = i;
+    
+        clear_l1();
+        clear_l2();
     }
-
-    clear_l1();
-    clear_l2();
 
     unsigned int j, j_last;
 
-#ifdef MULTITHREADED_HALF_ARRAY_READ
-    if (args.id == 0)
-    {
-        j = 0;
-        j_last = n/2;
-    }
-    else if (args.id == 1)
-    {
-        j = n/2 + 1;
-        j_last = n;
-
-    }
-#else
-    j = 0;
-    j_last = n;
-#endif
-
     volatile uint64_t b;
     std::cout << "Thread #" << args.id << " accessing indices ";
-    std::cout << std::dec << j << " to " << std::dec << j_last << std::endl;
+    
+    // j is initialized inside the loop now
+    //std::cout << std::dec << j << " to " << std::dec << j_last << std::endl;
     for (unsigned int i = 0; i < args.iterations; ++i)
     {
+#ifdef MULTITHREADED_HALF_ARRAY_READ
+        if (args.id == 0)
+        {
+            j = 0;
+            j_last = n/2;
+        }
+        else if (args.id == 1)
+        {
+            j = n/2 + 1;
+            j_last = n;
+
+        }
+#else
+        j = 0;
+        j_last = n;
+#endif
+
         //printf("running iteration %d\n", i);
         read_values(args.cpu_msr, store_start);
         for (uint64_t jj = j; jj < j_last; ++jj)

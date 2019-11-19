@@ -7,9 +7,17 @@
 #define N_CUSTOM_CTR 6
 #define MAX_PTS 50000
 
+#define DEDOS_07    1
+
 #define L1_SIZE 32768
+
+#ifdef DEDOS_07
+#define L2_SIZE 262144
+#define L3_SIZE 20971520
+#else
 #define L2_SIZE 1048576
 #define L3_SIZE 14417920
+#endif
 
 /*********************
  * Utility functions *
