@@ -1,0 +1,45 @@
+L2 cache size: 256 K
+No of elements: 32768 (Fully occupying L2)
+Type of elements : uint64_t 
+Single dimensional array
+Test type : 2 threads accessing the shared array each running 2 iterations accessing all the elements of the shared array.
+
+Results:
+Thread 1 (which is setting up the array):
+L2 References - 4131,4113 which is as expected. 
+L2 Misses - 4115, 3237
+L3 references - 4115, 3237
+L3 misses - 0, 0
+
+Thread 2:
+L2 References - 2360, 7566
+L2 Misses - 1322, 3234
+L3 references - 307, 496
+L3 misses - 4, 0
+
+i) Core 1 prepares the array (L2_SIZE)
+ii) Core 1 clears both L1 and L2
+iii) Core 1 reads the array twice
+iv) Core 2 reads the array twice
+
+Questions to answer:
+?) Will the first iteration in iii) hit in L3 ?
+- In my exclusive L3, it should because data was moved there after L1/L2 were cleared
+- In your inclusive L3, it might, because of the write-back, write-allocate policy (a block inserted in L2 in place
+of the array element would make space for it -- write-allocate -- and push the array element in L3 -- write-back)
+
+Ans: There are no misses in L3. According to me, this is because when we first setup the array, it is loaded into L3 first (inclusive) 
+and from there it is loaded into L1. So, if we clear L1 and L2, it should be updated with the new values in L3.  
+
+?) Second iteration of iii) should mostly hit in L2 ?
+- It should, have we have seen in our previous experiments
+
+Ans: This is not the case
+
+?) What is the behavior of iv) ?
+Possible answer:
+- Core 2 misses in L1/L2.
+- Data changes state from Exclusive to Shared, and is moved from core 1's L2 to L3.
+- Core 2 hits in L3.
+
+Ans: 
