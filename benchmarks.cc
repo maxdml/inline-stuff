@@ -29,9 +29,9 @@ void bm_single_d_array_multithreaded(struct ThreadArgs &args)
         for (uint64_t i = 0; i < n; ++i)
             shared_array[i] = i;
     
+    }
         clear_l1();
         clear_l2();
-    }
 
     unsigned int j, j_last;
 
