@@ -167,6 +167,16 @@ core was not in a halt state and not in a TM stopclock state.
 #define HW_L2_RQSTS_MISSES_EVTNR (0x24)
 #define HW_L2_RQSTS_MISSES_UMASK  (0x3F)
 
+#define HW_L2_RQSTS_RFO_HITS_EVTNR          (0x24)
+#define HW_L2_RQSTS_RFO_MISS_EVTNR          (0x24)
+#define HW_L2_RQSTS_RFO_HITS_UMASK          (0x42)
+#define HW_L2_RQSTS_RFO_MISS_UMASK          (0x22)
+#define HW_L2_RQSTS_ALL_RFO_EVTNR           (0x24)
+#define HW_L2_RQSTS_ALL_RFO_UMASK           (0xE2)
+#define OFFCORE_REQUESTS_DEMAND_RFO_EVTNR   (0xB0)  // NOTE: Use only when HTT is off
+#define OFFCORE_REQUESTS_DEMAND_RFO_UMASK   (0x04)
+#define TX_MEM_ABORT_CONFLICT_EVTNR         (0x54)
+#define TX_MEM_ABORT_CONFLICT_UMASK         (0x01)
 
 /*===========================================================================================
   *             CONFIGURATION REGSITERS' STRUCTURES

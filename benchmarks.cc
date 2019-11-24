@@ -13,7 +13,7 @@
 
 //#define MULTITHREADED_HALF_ARRAY_READ 1
 
-uint64_t n = L2_SIZE / sizeof(uint64_t);
+uint64_t n = (L2_SIZE / sizeof(uint64_t)) / 2;
 volatile uint64_t *shared_array;
 std::atomic<bool> sa_flag = false;
 
