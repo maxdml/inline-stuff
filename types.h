@@ -167,12 +167,19 @@ core was not in a halt state and not in a TM stopclock state.
 #define HW_L2_RQSTS_MISSES_EVTNR (0x24)
 #define HW_L2_RQSTS_MISSES_UMASK  (0x3F)
 
-#define HW_L2_RQSTS_RFO_HITS_EVTNR          (0x24)
-#define HW_L2_RQSTS_RFO_MISS_EVTNR          (0x24)
-#define HW_L2_RQSTS_RFO_HITS_UMASK          (0x42)
-#define HW_L2_RQSTS_RFO_MISS_UMASK          (0x22)
-#define HW_L2_RQSTS_ALL_RFO_EVTNR           (0x24)
-#define HW_L2_RQSTS_ALL_RFO_UMASK           (0xE2)
+#define HW_L2_RQSTS_RFO_HITS_EVTNR                  (0x24)
+#define HW_L2_RQSTS_RFO_HITS_UMASK                  (0x42)
+#define HW_L2_RQSTS_RFO_MISS_EVTNR                  (0x24)
+#define HW_L2_RQSTS_RFO_MISS_UMASK                  (0x22)
+#define HW_L2_RQSTS_ALL_RFO_EVTNR                   (0x24)
+#define HW_L2_RQSTS_ALL_RFO_UMASK                   (0xE2)
+#define HW_L2_RQSTS_DEMAND_DATA_RD_MISS_EVTNR       (0x24)
+#define HW_L2_RQSTS_DEMAND_DATA_RD_MISS_UMASK       (0x21)
+#define HW_L2_RQSTS_DEMAND_DATA_RD_HIT_EVTNR        (0x24)
+#define HW_L2_RQSTS_DEMAND_DATA_RD_HIT_UMASK        (0x41)
+#define HW_L2_RQSTS_ALL_DEMAND_DATA_RD_EVTNR        (0x24)
+#define HW_L2_RQSTS_ALL_DEMAND_DATA_RD_UMASK        (0xE1)
+
 #define OFFCORE_REQUESTS_DEMAND_RFO_EVTNR   (0xB0)  // NOTE: Use only when HTT is off
 #define OFFCORE_REQUESTS_DEMAND_RFO_UMASK   (0x04)
 #define TX_MEM_ABORT_CONFLICT_EVTNR         (0x54)
@@ -341,11 +348,13 @@ struct counter_table_t {
 
 #if 1
 static struct counter_table_t counter_tbl[] = {
-    {"L2_REFS",         CUSTOM_CTR,     HW_L2_RQSTS_REFERENCES_EVTNR,      HW_L2_RQSTS_REFERENCES_UMASK,    IA32_PERFEVTSEL0_ADDR,  IA32_PMC0,                      0},
-    {"L2_MISSES",       CUSTOM_CTR,     HW_L2_RQSTS_MISSES_EVTNR,          HW_L2_RQSTS_MISSES_UMASK,        IA32_PERFEVTSEL1_ADDR,  IA32_PMC1,                      1},
-    {"L3_REFS",         CUSTOM_CTR,     ARCH_LLC_REFERENCE_EVTNR,          ARCH_LLC_REFERENCE_UMASK,        IA32_PERFEVTSEL2_ADDR,  IA32_PMC2,                      2},
-    {"L3_MISSES",       CUSTOM_CTR,     ARCH_LLC_MISS_EVTNR,               ARCH_LLC_MISS_UMASK,             IA32_PERFEVTSEL3_ADDR,  IA32_PMC3,                      3},
-    { NULL,             0x0,            0x0,                               0x0,                             0x0,                    0x0,                            0}
+    {"L2_REFS",         CUSTOM_CTR,     HW_L2_RQSTS_REFERENCES_EVTNR,               HW_L2_RQSTS_REFERENCES_UMASK,               IA32_PERFEVTSEL0_ADDR,  IA32_PMC0,                      0},
+    {"L2_MISSES",       CUSTOM_CTR,     HW_L2_RQSTS_MISSES_EVTNR,                   HW_L2_RQSTS_MISSES_UMASK,                   IA32_PERFEVTSEL1_ADDR,  IA32_PMC1,                      1},
+    {"L2_DD_HITS",      CUSTOM_CTR,     HW_L2_RQSTS_DEMAND_DATA_RD_HIT_EVTNR,       HW_L2_RQSTS_DEMAND_DATA_RD_HIT_UMASK,       IA32_PERFEVTSEL2_ADDR,  IA32_PMC1,                      2},
+    {"L2_DD_MISSES",    CUSTOM_CTR,     HW_L2_RQSTS_DEMAND_DATA_RD_MISS_EVTNR,      HW_L2_RQSTS_DEMAND_DATA_RD_MISS_UMASK,      IA32_PERFEVTSEL3_ADDR,  IA32_PMC3,                      3},
+    {"L3_REFS",         CUSTOM_CTR,     ARCH_LLC_REFERENCE_EVTNR,                   ARCH_LLC_REFERENCE_UMASK,                   IA32_PERFEVTSEL4_ADDR,  IA32_PMC4,                      4},
+    {"L3_MISSES",       CUSTOM_CTR,     ARCH_LLC_MISS_EVTNR,                        ARCH_LLC_MISS_UMASK,                        IA32_PERFEVTSEL5_ADDR,  IA32_PMC5,                      5},
+    { NULL,             0x0,            0x0,                                        0x0,                                        0x0,                    0x0,                            0}
 };
 
 #else

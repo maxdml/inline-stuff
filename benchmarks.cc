@@ -23,6 +23,8 @@ void bm_single_d_array_multithreaded(struct ThreadArgs &args)
     uint64_t *store_end = static_cast<uint64_t *>(malloc((N_CUSTOM_CTR) * sizeof(uint64_t)));
 
     if (sa_flag == false) {
+
+        printf("thread %d set up the shared array\n", args.id);
         sa_flag = true;
         std::cout << "Thread #" << args.id << " setting shared array" << std::endl;
         shared_array = static_cast<uint64_t*>(malloc(L2_SIZE));
@@ -126,7 +128,7 @@ void bm_single_d_array(struct ThreadArgs &args)
 
     std::cout << "Accessing 0x" << n << " elements" << std::endl;
     /* Fill the array */
-    volatile uint64_t *a = static_cast<uint64_t *>(malloc(L2_SIZE));
+    volatile uint64_t *a = static_cast<uint64_t *>(malloc(n * sizeof(uint64_t)));
     printf("Filling the array\n");
     for (uint64_t i = 0; i < n; ++i)
     {
