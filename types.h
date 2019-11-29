@@ -179,6 +179,12 @@ core was not in a halt state and not in a TM stopclock state.
 #define HW_L2_RQSTS_DEMAND_DATA_RD_HIT_UMASK        (0x41)
 #define HW_L2_RQSTS_ALL_DEMAND_DATA_RD_EVTNR        (0x24)
 #define HW_L2_RQSTS_ALL_DEMAND_DATA_RD_UMASK        (0xE1)
+#define HW_L2_RQSTS_L2_PF_HIT_EVTNR                 (0x24)
+#define HW_L2_RQSTS_L2_PF_HIT_UMASK                 (0x50)
+#define HW_L2_RQSTS_L2_PF_MISS_EVTNR                (0x24)
+#define HW_L2_RQSTS_L2_PF_MISS_UMASK                (0x30)
+#define HW_L2_RQSTS_ALL_PF_EVTNR                    (0x24)
+#define HW_L2_RQSTS_ALL_PF_UMASK                    (0xF8)
 
 #define OFFCORE_REQUESTS_DEMAND_RFO_EVTNR   (0xB0)  // NOTE: Use only when HTT is off
 #define OFFCORE_REQUESTS_DEMAND_RFO_UMASK   (0x04)
@@ -352,8 +358,10 @@ static struct counter_table_t counter_tbl[] = {
     {"L2_MISSES",       CUSTOM_CTR,     HW_L2_RQSTS_MISSES_EVTNR,                   HW_L2_RQSTS_MISSES_UMASK,                   IA32_PERFEVTSEL1_ADDR,  IA32_PMC1,                      1},
     {"L2_DD_HITS",      CUSTOM_CTR,     HW_L2_RQSTS_DEMAND_DATA_RD_HIT_EVTNR,       HW_L2_RQSTS_DEMAND_DATA_RD_HIT_UMASK,       IA32_PERFEVTSEL2_ADDR,  IA32_PMC1,                      2},
     {"L2_DD_MISSES",    CUSTOM_CTR,     HW_L2_RQSTS_DEMAND_DATA_RD_MISS_EVTNR,      HW_L2_RQSTS_DEMAND_DATA_RD_MISS_UMASK,      IA32_PERFEVTSEL3_ADDR,  IA32_PMC3,                      3},
-    {"L3_REFS",         CUSTOM_CTR,     ARCH_LLC_REFERENCE_EVTNR,                   ARCH_LLC_REFERENCE_UMASK,                   IA32_PERFEVTSEL4_ADDR,  IA32_PMC4,                      4},
-    {"L3_MISSES",       CUSTOM_CTR,     ARCH_LLC_MISS_EVTNR,                        ARCH_LLC_MISS_UMASK,                        IA32_PERFEVTSEL5_ADDR,  IA32_PMC5,                      5},
+    {"L2_PF_HITS",      CUSTOM_CTR,     HW_L2_RQSTS_L2_PF_HIT_EVTNR,                HW_L2_RQSTS_L2_PF_HIT_UMASK,                IA32_PERFEVTSEL4_ADDR,  IA32_PMC4,                      4},
+    {"L2_PF_MISSES",    CUSTOM_CTR,     HW_L2_RQSTS_L2_PF_MISS_EVTNR,               HW_L2_RQSTS_L2_PF_MISS_UMASK,               IA32_PERFEVTSEL5_ADDR,  IA32_PMC5,                      5},
+    {"L3_REFS",         CUSTOM_CTR,     ARCH_LLC_REFERENCE_EVTNR,                   ARCH_LLC_REFERENCE_UMASK,                   IA32_PERFEVTSEL6_ADDR,  IA32_PMC6,                      6},
+    {"L3_MISSES",       CUSTOM_CTR,     ARCH_LLC_MISS_EVTNR,                        ARCH_LLC_MISS_UMASK,                        IA32_PERFEVTSEL7_ADDR,  IA32_PMC7,                      7},
     { NULL,             0x0,            0x0,                                        0x0,                                        0x0,                    0x0,                            0}
 };
 
