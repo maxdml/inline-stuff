@@ -4,7 +4,7 @@
 #include "msr.hh"
 
 #define N_FIXED_CTR 0
-#define N_CUSTOM_CTR 6
+#define N_CUSTOM_CTR 8
 #define MAX_PTS 50000
 
 #define DEDOS_07    1

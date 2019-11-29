@@ -361,7 +361,8 @@ static struct counter_table_t counter_tbl[] = {
     {"L2_PF_HITS",      CUSTOM_CTR,     HW_L2_RQSTS_L2_PF_HIT_EVTNR,                HW_L2_RQSTS_L2_PF_HIT_UMASK,                IA32_PERFEVTSEL4_ADDR,  IA32_PMC4,                      4},
     {"L2_PF_MISSES",    CUSTOM_CTR,     HW_L2_RQSTS_L2_PF_MISS_EVTNR,               HW_L2_RQSTS_L2_PF_MISS_UMASK,               IA32_PERFEVTSEL5_ADDR,  IA32_PMC5,                      5},
     {"L3_REFS",         CUSTOM_CTR,     ARCH_LLC_REFERENCE_EVTNR,                   ARCH_LLC_REFERENCE_UMASK,                   IA32_PERFEVTSEL6_ADDR,  IA32_PMC6,                      6},
-    {"L3_MISSES",       CUSTOM_CTR,     ARCH_LLC_MISS_EVTNR,                        ARCH_LLC_MISS_UMASK,                        IA32_PERFEVTSEL7_ADDR,  IA32_PMC7,                      7},
+    {"L2_ALL_RFO",      CUSTOM_CTR,     HW_L2_RQSTS_ALL_RFO_EVTNR,                  HW_L2_RQSTS_ALL_RFO_UMASK,                  IA32_PERFEVTSEL7_ADDR,  IA32_PMC7,                      7},
+    //{"L3_MISSES",       CUSTOM_CTR,     ARCH_LLC_MISS_EVTNR,                        ARCH_LLC_MISS_UMASK,                        IA32_PERFEVTSEL7_ADDR,  IA32_PMC7,                      7},
     { NULL,             0x0,            0x0,                                        0x0,                                        0x0,                    0x0,                            0}
 };
 
