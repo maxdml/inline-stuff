@@ -167,29 +167,47 @@ core was not in a halt state and not in a TM stopclock state.
 #define HW_L2_RQSTS_MISSES_EVTNR (0x24)
 #define HW_L2_RQSTS_MISSES_UMASK  (0x3F)
 
-#define HW_L2_RQSTS_RFO_HITS_EVTNR                  (0x24)
+#define HW_L2_RQSTS_RFO_HITS_EVTNR                  (0x24)  /** number of store RFO requests that hit the L2 cache.*/
 #define HW_L2_RQSTS_RFO_HITS_UMASK                  (0x42)
-#define HW_L2_RQSTS_RFO_MISS_EVTNR                  (0x24)
+#define HW_L2_RQSTS_RFO_MISS_EVTNR                  (0x24)  /** number of store RFO requests that miss the L2 cache.*/
 #define HW_L2_RQSTS_RFO_MISS_UMASK                  (0x22)
-#define HW_L2_RQSTS_ALL_RFO_EVTNR                   (0x24)
+#define HW_L2_RQSTS_ALL_RFO_EVTNR                   (0x24)  /** all L2 store RFO requests */
 #define HW_L2_RQSTS_ALL_RFO_UMASK                   (0xE2)
-#define HW_L2_RQSTS_DEMAND_DATA_RD_MISS_EVTNR       (0x24)
+#define HW_L2_RQSTS_DEMAND_DATA_RD_MISS_EVTNR       (0x24)  /** Demand data read requests that missed L2, no rejects*/
 #define HW_L2_RQSTS_DEMAND_DATA_RD_MISS_UMASK       (0x21)
-#define HW_L2_RQSTS_DEMAND_DATA_RD_HIT_EVTNR        (0x24)
+#define HW_L2_RQSTS_DEMAND_DATA_RD_HIT_EVTNR        (0x24)  /** Demand data read requests that hit L2 cache. */
 #define HW_L2_RQSTS_DEMAND_DATA_RD_HIT_UMASK        (0x41)
-#define HW_L2_RQSTS_ALL_DEMAND_DATA_RD_EVTNR        (0x24)
+#define HW_L2_RQSTS_ALL_DEMAND_DATA_RD_EVTNR        (0x24)  /** any demand and L1 HW prefetch data load requests to L2*/
 #define HW_L2_RQSTS_ALL_DEMAND_DATA_RD_UMASK        (0xE1)
-#define HW_L2_RQSTS_L2_PF_HIT_EVTNR                 (0x24)
+#define HW_L2_RQSTS_L2_PF_HIT_EVTNR                 (0x24)  /** all L2 HW prefetcher requests that hit L2. */
 #define HW_L2_RQSTS_L2_PF_HIT_UMASK                 (0x50)
-#define HW_L2_RQSTS_L2_PF_MISS_EVTNR                (0x24)
+#define HW_L2_RQSTS_L2_PF_MISS_EVTNR                (0x24)  /** all L2 HW prefetcher requests that missed L2.*/
 #define HW_L2_RQSTS_L2_PF_MISS_UMASK                (0x30)
-#define HW_L2_RQSTS_ALL_PF_EVTNR                    (0x24)
+#define HW_L2_RQSTS_ALL_PF_EVTNR                    (0x24)  /** all L2 HW prefetcher requests */
 #define HW_L2_RQSTS_ALL_PF_UMASK                    (0xF8)
 
-#define OFFCORE_REQUESTS_DEMAND_RFO_EVTNR   (0xB0)  // NOTE: Use only when HTT is off
-#define OFFCORE_REQUESTS_DEMAND_RFO_UMASK   (0x04)
-#define TX_MEM_ABORT_CONFLICT_EVTNR         (0x54)
-#define TX_MEM_ABORT_CONFLICT_UMASK         (0x01)
+#define HW_OFFCORE_REQUESTS_DEMAND_RFO_EVTNR        (0xB0)  // NOTE: Use only when HTT is off
+#define HW_OFFCORE_REQUESTS_DEMAND_RFO_UMASK        (0x04)  
+#define HW_OFFCORE_REQUESTS_DEMAND_DATA_RD_EVTNR    (0xB0)  // NOTE: Use only when HTT is off
+#define HW_OFFCORE_REQUESTS_DEMAND_DATA_RD_UMASK    (0x01)
+
+#define HW_TX_MEM_ABORT_CONFLICT_EVTNR              (0x54)
+#define HW_TX_MEM_ABORT_CONFLICT_UMASK              (0x01)
+
+#define HW_L2_TRANS_DEMAND_DATA_RD_EVTNR            (0xF0)  /** Demand data read requests that access L2 cache. */
+#define HW_L2_TRANS_DEMAND_DATA_RD_UMASK            (0x01)  
+#define HW_L2_TRANS_RFO_EVTNR                       (0xF0)  /** RFO requests that access L2 cache */
+#define HW_L2_TRANS_RFO_UMASK                       (0x02)  
+#define HW_L2_TRANS_L2_FILL_EVTNR                   (0xF0)  /** L2 fill requests that access L2 cache */   
+#define HW_L2_TRANS_L2_FILL_UMASK                   (0x20)   
+
+#define HW_L2_LINES_IN_I_EVTNR                      (0xF1)  /** L2 cache lines in I state filling L2. */
+#define HW_L2_LINES_IN_I_UMASK                      (0x01)
+#define HW_L2_LINES_IN_S_EVTNR                      (0xF1)  /** L2 cache lines in S state filling L2. */
+#define HW_L2_LINES_IN_S_UMASK                      (0x02)
+#define HW_L2_LINES_IN_E_EVTNR                      (0xF1)  /** L2 cache lines in E state filling L2. */
+#define HW_L2_LINES_IN_E_UMASK                      (0x04)
+
 
 /*===========================================================================================
   *             CONFIGURATION REGSITERS' STRUCTURES
