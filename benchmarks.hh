@@ -149,3 +149,4 @@ void bm_2d_array_non_cont(struct ThreadArgs &args);
 void cache_work(struct ThreadArgs &args);
 void file_work(struct ThreadArgs &args);
 void oned_arrays(struct ThreadArgs &args);
+void bm_single_d_array_write_multithreaded(struct ThreadArgs &args);

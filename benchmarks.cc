@@ -120,6 +120,48 @@ void bm_cache_line_test(struct ThreadArgs &args)
     free(store_end);
 }
 
+void bm_single_d_array_write_multithreaded(struct ThreadArgs &args)
+{
+    printf("benchmark function for single dimensional array - write\n");
+    uint64_t *store_start = static_cast<uint64_t *>(malloc((N_CUSTOM_CTR) * sizeof(uint64_t)));
+    uint64_t *store_end = static_cast<uint64_t *>(malloc((N_CUSTOM_CTR) * sizeof(uint64_t)));
+
+    if (sa_flag == false) {
+
+        printf("thread %d set up the shared array\n", args.id);
+        sa_flag = true;
+        std::cout << "Thread #" << args.id << " setting shared array" << std::endl;
+        shared_array = static_cast<uint64_t*>(malloc(n * sizeof(uint64_t)));
+        for (uint64_t i = 0; i < n; ++i)
+            shared_array[i] = i;
+    }
+    clear_l1();
+    clear_l2();
+
+    /* Write it */
+    for (unsigned int i = 0; i < args.iterations; ++i)
+    {
+        printf("running iteration %d\n", i);
+        read_values(args.cpu_msr, store_start);
+
+        for (uint64_t j = 0; j < n; ++j)
+        {
+            shared_array[j] = j + 1;
+            //__asm__ volatile("clflush (%0)" : : "r" ((volatile void *)& a[j]) : "memory");
+        }
+        read_values(args.cpu_msr, store_end);
+        for (int c = 0; counter_tbl[c].name; ++c)
+        {
+            args.values(c, args.counts) = store_end[c] - store_start[c];
+        }
+        fake_out_optimizations((uint64_t*)shared_array, sizeof(uint64_t));
+        args.counts++;
+    }
+
+    free(store_start);
+    free(store_end);
+}
+
 void bm_single_d_array(struct ThreadArgs &args)
 {
     printf("benchmark function for single dimensional array\n");

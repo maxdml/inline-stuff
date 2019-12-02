@@ -10,7 +10,7 @@ plt.close('all')
 #f = 'csv/single_l2_len_full.csv'
 f = sys.argv[2]
 df = pd.read_csv(f, delimiter='\t')
-cols = ['L2_REFS', 'L2_MISSES', 'L2_DD_HITS', 'L2_DD_MISSES', 'L2_PF_HITS', 'L2_PF_MISSES', 'L3_REFS', 'L2_ALL_RFO']#, 'L2_HITS', 'L2_MISSES']#, 'CPU_CYCLES', 'INSN_RETIRED']
+cols = ['L2_REFS', 'L2_MISSES', 'L2_DD_HITS', 'L2_DD_MISSES', 'L2_RFO_HITS', 'L2_RFO_MISSES', 'L3_REFS', 'L2_ALL_RFO']#, 'L2_HITS', 'L2_MISSES']#, 'CPU_CYCLES', 'INSN_RETIRED']
 plt.figure(0, figsize=(10, 10))
 fig, axs = plt.subplots(1, len(cols), squeeze=False, sharey='row', sharex=True, num=0)
 for i, col in enumerate(cols):
