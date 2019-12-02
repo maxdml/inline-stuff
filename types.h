@@ -374,7 +374,7 @@ struct counter_table_t {
 static struct counter_table_t counter_tbl[] = {
     {"L2_REFS",         CUSTOM_CTR,     HW_L2_RQSTS_REFERENCES_EVTNR,               HW_L2_RQSTS_REFERENCES_UMASK,               IA32_PERFEVTSEL0_ADDR,  IA32_PMC0,                      0},
     {"L2_MISSES",       CUSTOM_CTR,     HW_L2_RQSTS_MISSES_EVTNR,                   HW_L2_RQSTS_MISSES_UMASK,                   IA32_PERFEVTSEL1_ADDR,  IA32_PMC1,                      1},
-    {"L2_DD_HITS",      CUSTOM_CTR,     HW_L2_RQSTS_DEMAND_DATA_RD_HIT_EVTNR,       HW_L2_RQSTS_DEMAND_DATA_RD_HIT_UMASK,       IA32_PERFEVTSEL2_ADDR,  IA32_PMC1,                      2},
+    {"L2_DD_HITS",      CUSTOM_CTR,     HW_L2_RQSTS_DEMAND_DATA_RD_HIT_EVTNR,       HW_L2_RQSTS_DEMAND_DATA_RD_HIT_UMASK,       IA32_PERFEVTSEL2_ADDR,  IA32_PMC2,                      2},
     {"L2_DD_MISSES",    CUSTOM_CTR,     HW_L2_RQSTS_DEMAND_DATA_RD_MISS_EVTNR,      HW_L2_RQSTS_DEMAND_DATA_RD_MISS_UMASK,      IA32_PERFEVTSEL3_ADDR,  IA32_PMC3,                      3},
     {"L2_RFO_HITS",     CUSTOM_CTR,     HW_L2_RQSTS_RFO_HITS_EVTNR,                 HW_L2_RQSTS_RFO_HITS_UMASK,                 IA32_PERFEVTSEL4_ADDR,  IA32_PMC4,                      4},
     {"L2_RFO_MISSES",   CUSTOM_CTR,     HW_L2_RQSTS_RFO_MISS_EVTNR,                 HW_L2_RQSTS_RFO_MISS_UMASK,                 IA32_PERFEVTSEL5_ADDR,  IA32_PMC5,                      5},
