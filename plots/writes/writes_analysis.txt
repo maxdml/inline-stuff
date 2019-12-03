@@ -1,0 +1,49 @@
+Analysis of counters when writing to L2 cache:
+L2 cache size : 256KB
+Type of array : Single dimensional
+Size of array written: Half the capacity of L2 - 16384 elements
+Data type of array : uint64_t
+Cache line size : 64 bytes
+Counters analyzed : 'L2_REFS', L2_MISSES', 'L2_RFO_HITS', 'L2_RFO_MISSES', 'OFFCORE_RFO', 'L3_REFS',  'L3_MISSES', 'L2_PF_HIT', 'L2_PF_MISS', 'L2_DEMAND_HIT', 'L2_DEMAND_MISS', L2_IN_E', 'L2_IN_S', 'L2_IN_I'
+Test type : 2 threads accessing the shared array each running 2 iterations writing all the elements of the shared array.
+
+Brief description of new counters added:
+1. L2_DEMAND_HIT : Demand data read requests that hit L2 cache. Demand data reads can bring a line 
+    into L2 in S or E state, depending on whether a line is present in clean state in any other cache.
+2. L2_DEMAND_MISS : Demand data read requests that miss L2 cache 
+3. L2_RFO_HITS : number of store RFO requests that hit the L2 cache. RFO combines a read and an invalidate broadcast. It is issued when a processor wants to write to a cche line that is in I or S states of MESI protocol. 
+4. L2_RFO_MISSES : number of store RFO requests that miss the L2 cache
+5. L2_PF_HITS : all L2 HW prefetcher requests that hit L2. PF requests are made only when L2 prefetchers are enabled. 
+6. L2_PF_MISSES : all L2 HW prefetcher requests that miss L2 
+7. L2_REFS : All the references to L2 including demand requests, RFO requests and PF requests. 
+7. L2_IN_E : L2 cache lines in E state filling L2.
+8. L2_IN_S: L2 cache lines in S state filling L2.
+9. L2_IN_I : L2 cache lines in I state filling L2.
+
+
+Common Analysis:
+Demand data read hits and misses are always 0 since this experiments are for writes and there are no reads. This actually implies that demand data read counters are only 
+counting how many times cache is accessed to read the data, no writes at all. 
+
+1. Analysis when L2 PFs are disabled
+As expected PF hit and miss counters are 0 in this case. 
+The no. of references to L2 are around 2048, which is as expected because there are a total of 16384 elements and 
+cache lie size is 64 bytes, therefore total 16384 / 8 = 2048 accesses. 
+L2 misses are also equal to 2048. This was not the case when we performed experiments on reading, but here 
+since we are writing to a shared array, the cache line always becomes invalidated in the other cache. 
+RFO misses are also equal to 2048 which is as expected because whatever L2 misses it is giving, they are all 
+RFO counts only since there are no PF or demand data counts. Consequently RFO hits are 0. 
+As expected, L3 references are equal to L2 misses - 2048. 
+Again as expected, offcore RFO requests are equal to L2 misses, RFO misses, and L3 references. This shows that for ownership, 
+it has to go offcore to L3 to request for data it needs to write to. 
+L3 misses are 0, which means L3 is able to provide it with all the data it needs. 
+L2_IN_E count is also 2048 which shows that all the references that are made offcore bring the data in exclusive state 
+because it needs to write to it. L2_IN_I and L2_IN_S counts are both 0.
+
+
+2. Analysis when L2 PFs are enabled
+Unlike PF disabled case, here L2 refs are composed of RFO and PF counters, as opposed to just RFOs in case of PF disabled. 
+So, there are around 4096 L2 refs out of which around 2048 are RFO and remaning 2048 are PF counts.
+There are 2048 RFO hits and around 0 RFO misses. And around 0 PF hits and 2048 PF misses. Meets expectations ? 
+As expected, offcore RFOs are exactly equal to RFO misses, which is exactly equal to L3 refs. 
+And similar to PF disabled case, L2_IN_E is exactly equal to L2 misses, whereas L2_IN_S and L2_IN_S are 0.
