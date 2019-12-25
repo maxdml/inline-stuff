@@ -5,6 +5,8 @@
 #include <stdint.h>
 #include <unistd.h>
 #include <assert.h>
+#include <time.h>
+#include <sys/time.h>
 
 #include <iostream>
 #include <atomic>
@@ -13,11 +15,12 @@
 
 //#define MULTITHREADED_HALF_ARRAY_READ 1
 
+bool can_run = false;
 uint64_t n = (L2_SIZE / sizeof(uint64_t)) / 2;
 volatile uint64_t *shared_array;
 std::atomic<bool> sa_flag = false;
 
-void bm_single_d_array_multithreaded(struct ThreadArgs &args)
+void bm_single_d_array_multithreaded_t1(struct ThreadArgs &args)
 {
     uint64_t *store_start = static_cast<uint64_t *>(malloc((N_CUSTOM_CTR) * sizeof(uint64_t)));
     uint64_t *store_end = static_cast<uint64_t *>(malloc((N_CUSTOM_CTR) * sizeof(uint64_t)));
@@ -27,7 +30,7 @@ void bm_single_d_array_multithreaded(struct ThreadArgs &args)
         printf("thread %d set up the shared array\n", args.id);
         sa_flag = true;
         std::cout << "Thread #" << args.id << " setting shared array" << std::endl;
-        shared_array = static_cast<uint64_t*>(malloc(L2_SIZE));
+        shared_array = static_cast<uint64_t*>(malloc(n * sizeof(uint64_t)));
         for (uint64_t i = 0; i < n; ++i)
             shared_array[i] = i;
     
@@ -35,7 +38,14 @@ void bm_single_d_array_multithreaded(struct ThreadArgs &args)
         clear_l1();
         clear_l2();
 
+    /** Let the other array run completely first */
+    //if (args.id == 1)
+    //{
+    //    while (!can_run)
+    //        ;
+    //}
     unsigned int j, j_last;
+    struct timeval tv;
 
     volatile uint64_t b;
     std::cout << "Thread #" << args.id << " accessing indices ";
@@ -62,6 +72,10 @@ void bm_single_d_array_multithreaded(struct ThreadArgs &args)
 #endif
 
         //printf("running iteration %d\n", i);
+        gettimeofday(&tv,NULL);
+        uint64_t time = tv.tv_sec*(uint64_t)1000000+tv.tv_usec;
+        printf("time : %lu\n", time);
+        args.times.push_back(time);
         read_values(args.cpu_msr, store_start);
         for (uint64_t jj = j; jj < j_last; ++jj)
         {
@@ -77,6 +91,281 @@ void bm_single_d_array_multithreaded(struct ThreadArgs &args)
         fake_out_optimizations((uint64_t*)shared_array, L2_SIZE);
         args.counts++;
     }
+
+    //if (args.id == 0)
+    //{
+    //    can_run = true;
+    //}
+    free(store_start);
+    free(store_end);
+}
+
+void bm_single_d_array_multithreaded_t2(struct ThreadArgs &args)
+{
+    uint64_t *store_start = static_cast<uint64_t *>(malloc((N_CUSTOM_CTR) * sizeof(uint64_t)));
+    uint64_t *store_end = static_cast<uint64_t *>(malloc((N_CUSTOM_CTR) * sizeof(uint64_t)));
+
+    if (sa_flag == false) {
+
+        printf("thread %d set up the shared array\n", args.id);
+        sa_flag = true;
+        std::cout << "Thread #" << args.id << " setting shared array" << std::endl;
+        shared_array = static_cast<uint64_t*>(malloc(n * sizeof(uint64_t)));
+        for (uint64_t i = 0; i < n; ++i)
+            shared_array[i] = i;
+    }
+        clear_l1();
+        clear_l2();
+
+    /** Let the other array run completely first */
+    if (args.id == 1)
+    {
+        while (!can_run)
+            ;
+    }
+
+    volatile uint64_t b;
+    std::cout << "Thread #" << args.id << " accessing indices ";
+    
+    struct timeval tv;
+    
+    // j is initialized inside the loop now
+    //std::cout << std::dec << j << " to " << std::dec << j_last << std::endl;
+    /** Read the entire array 5 times */
+    for (unsigned int i = 0; i < args.iterations / 2; ++i)
+    {
+        //printf("running iteration %d of id %d\n", i, args.id);
+        gettimeofday(&tv,NULL);
+        uint64_t time = tv.tv_sec*(uint64_t)1000000+tv.tv_usec;
+        printf("time : %lu\n", time);
+        args.times.push_back(time);
+        read_values(args.cpu_msr, store_start);
+        for (uint64_t j = 0; j < n; ++j)
+        {
+            b = shared_array[j];
+            //__asm__ volatile("clflush (%0)" : : "r" ((volatile void *)& a[j]) : "memory");
+        }
+        read_values(args.cpu_msr, store_end);
+        for (int c = 0; counter_tbl[c].name; ++c)
+        {
+            args.values(c, args.counts) = store_end[c] - store_start[c];
+            //std::cout << counter_tbl[c].name << ": " << std::dec << args.values(c, args.counts) << std::endl;
+        }
+        fake_out_optimizations((uint64_t*)shared_array, L2_SIZE);
+        args.counts++;
+    }
+
+    /** Write the entire array once */
+    gettimeofday(&tv,NULL);
+    uint64_t time = tv.tv_sec*(uint64_t)1000000+tv.tv_usec;
+    printf("time : %lu\n", time);
+    args.times.push_back(time);
+    read_values(args.cpu_msr, store_start);
+    for (uint64_t j = 0; j < n; ++j)
+    {
+        shared_array[j] = j;
+    }
+    read_values(args.cpu_msr, store_end);
+    for (int c = 0; counter_tbl[c].name; ++c)
+    {
+        args.values(c, args.counts) = store_end[c] - store_start[c];
+        //std::cout << counter_tbl[c].name << ": " << std::dec << args.values(c, args.counts) << std::endl;
+    }
+    fake_out_optimizations((uint64_t*)shared_array, L2_SIZE);
+    args.counts++;
+
+    /** Read the entire array 5 more times */
+    for (unsigned int i = 0; i < args.iterations / 2; ++i)
+    {
+        gettimeofday(&tv,NULL);
+        uint64_t time = tv.tv_sec*(uint64_t)1000000+tv.tv_usec;
+        printf("time : %lu\n", time);
+        args.times.push_back(time);
+        
+        //printf("running iteration %d of id %d\n", i, args.id);
+        //printf("running iteration %d\n", i);
+        read_values(args.cpu_msr, store_start);
+        for (uint64_t j = 0; j < n; ++j)
+        {
+            b = shared_array[j];
+        }
+    
+        read_values(args.cpu_msr, store_end);
+        for (int c = 0; counter_tbl[c].name; ++c)
+        {
+            args.values(c, args.counts) = store_end[c] - store_start[c];
+        }
+        fake_out_optimizations((uint64_t*)shared_array, L2_SIZE);
+        args.counts++;
+    }
+
+    if (args.id == 0)
+    {
+        can_run = true;
+    }
+    free(store_start);
+    free(store_end);
+}
+
+void bm_single_d_array_multithreaded_t3(struct ThreadArgs &args)
+{
+    uint64_t *store_start = static_cast<uint64_t *>(malloc((N_CUSTOM_CTR) * sizeof(uint64_t)));
+    uint64_t *store_end = static_cast<uint64_t *>(malloc((N_CUSTOM_CTR) * sizeof(uint64_t)));
+
+    if (sa_flag == false) {
+
+        printf("thread %d set up the shared array\n", args.id);
+        sa_flag = true;
+        std::cout << "Thread #" << args.id << " setting shared array" << std::endl;
+        shared_array = static_cast<uint64_t*>(malloc(n * sizeof(uint64_t)));
+        for (uint64_t i = 0; i < n; ++i)
+            shared_array[i] = i;
+    
+    }
+        clear_l1();
+        clear_l2();
+
+    /** Let the other array run completely first */
+    //if (args.id == 1)
+    //{
+    //    while (!can_run)
+    //        ;
+    //}
+
+    volatile uint64_t b;
+    std::cout << "Thread #" << args.id << " accessing indices ";
+    struct timeval tv;
+    
+    // j is initialized inside the loop now
+    //std::cout << std::dec << j << " to " << std::dec << j_last << std::endl;
+    /** Read the entire array 9 times */
+    for (unsigned int i = 0; i < 9; ++i)
+    {
+        //printf("running iteration %d\n", i);
+        gettimeofday(&tv,NULL);
+        uint64_t time = tv.tv_sec*(uint64_t)1000000+tv.tv_usec;
+        printf("time : %lu\n", time);
+        args.times.push_back(time);
+        read_values(args.cpu_msr, store_start);
+        for (uint64_t j = 0; j < n; ++j)
+        {
+            b = shared_array[j];
+            //__asm__ volatile("clflush (%0)" : : "r" ((volatile void *)& a[j]) : "memory");
+        }
+        read_values(args.cpu_msr, store_end);
+        for (int c = 0; counter_tbl[c].name; ++c)
+        {
+            args.values(c, args.counts) = store_end[c] - store_start[c];
+            //std::cout << counter_tbl[c].name << ": " << std::dec << args.values(c, args.counts) << std::endl;
+        }
+        fake_out_optimizations((uint64_t*)shared_array, L2_SIZE);
+        args.counts++;
+    }
+
+    /** Write the entire array once */
+    gettimeofday(&tv,NULL);
+    uint64_t time = tv.tv_sec*(uint64_t)1000000+tv.tv_usec;
+    printf("time : %lu\n", time);
+    args.times.push_back(time);
+    read_values(args.cpu_msr, store_start);
+    for (uint64_t j = 0; j < n; ++j)
+    {
+        shared_array[j] = j;
+    }
+    read_values(args.cpu_msr, store_end);
+    for (int c = 0; counter_tbl[c].name; ++c)
+    {
+        args.values(c, args.counts) = store_end[c] - store_start[c];
+        //std::cout << counter_tbl[c].name << ": " << std::dec << args.values(c, args.counts) << std::endl;
+    }
+    fake_out_optimizations((uint64_t*)shared_array, L2_SIZE);
+    args.counts++;
+
+    //if (args.id == 0)
+    //{
+    //    can_run = true;
+    //}
+    free(store_start);
+    free(store_end);
+}
+
+void bm_single_d_array_multithreaded_t4(struct ThreadArgs &args)
+{
+    uint64_t *store_start = static_cast<uint64_t *>(malloc((N_CUSTOM_CTR) * sizeof(uint64_t)));
+    uint64_t *store_end = static_cast<uint64_t *>(malloc((N_CUSTOM_CTR) * sizeof(uint64_t)));
+
+    if (sa_flag == false) {
+
+        printf("thread %d set up the shared array\n", args.id);
+        sa_flag = true;
+        std::cout << "Thread #" << args.id << " setting shared array" << std::endl;
+        shared_array = static_cast<uint64_t*>(malloc(n * sizeof(uint64_t)));
+        //shared_array = static_cast<uint64_t*>(malloc(L2_SIZE));
+        for (uint64_t i = 0; i < n; ++i)
+            shared_array[i] = i;
+    
+    }
+        clear_l1();
+        clear_l2();
+
+    /** Let the other array run completely first */
+    //if (args.id == 1)
+    //{
+    //    while (!can_run)
+    //        ;
+    //}
+
+    volatile uint64_t b;
+    std::cout << "Thread #" << args.id << " accessing indices ";
+    struct timeval tv;
+    
+    /** Write the entire array once */
+    gettimeofday(&tv,NULL);
+    uint64_t time = tv.tv_sec*(uint64_t)1000000+tv.tv_usec;
+    printf("time : %lu\n", time);
+    args.times.push_back(time);
+    read_values(args.cpu_msr, store_start);
+    for (uint64_t j = 0; j < n; ++j)
+    {
+        shared_array[j] = j;
+    }
+    read_values(args.cpu_msr, store_end);
+    for (int c = 0; counter_tbl[c].name; ++c)
+    {
+        args.values(c, args.counts) = store_end[c] - store_start[c];
+        //std::cout << counter_tbl[c].name << ": " << std::dec << args.values(c, args.counts) << std::endl;
+    }
+    fake_out_optimizations((uint64_t*)shared_array, L2_SIZE);
+    args.counts++;
+
+    /** Read the entire array 9 times */
+    for (unsigned int i = 0; i < 9; ++i)
+    {
+        //printf("running iteration %d\n", i);
+        gettimeofday(&tv,NULL);
+        uint64_t time = tv.tv_sec*(uint64_t)1000000+tv.tv_usec;
+        printf("time : %lu\n", time);
+        args.times.push_back(time);
+        read_values(args.cpu_msr, store_start);
+        for (uint64_t j = 0; j < n; ++j)
+        {
+            b = shared_array[j];
+            //__asm__ volatile("clflush (%0)" : : "r" ((volatile void *)& a[j]) : "memory");
+        }
+        read_values(args.cpu_msr, store_end);
+        for (int c = 0; counter_tbl[c].name; ++c)
+        {
+            args.values(c, args.counts) = store_end[c] - store_start[c];
+            //std::cout << counter_tbl[c].name << ": " << std::dec << args.values(c, args.counts) << std::endl;
+        }
+        fake_out_optimizations((uint64_t*)shared_array, L2_SIZE);
+        args.counts++;
+    }
+
+    //if (args.id == 0)
+    //{
+    //    can_run = true;
+    //}
     free(store_start);
     free(store_end);
 }

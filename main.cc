@@ -16,6 +16,7 @@ namespace bpo = boost::program_options;
 #include "msr.hh"
 #include "benchmarks.hh"
 
+#define MAX_CPUS    8
 
 /*
  * Potentially helpful links
@@ -24,7 +25,7 @@ namespace bpo = boost::program_options;
  */
 
 typedef void (*BenchmarkFunc)(struct ThreadArgs &args);
-static BenchmarkFunc func = &bm_single_d_array_write_multithreaded;
+static BenchmarkFunc func[] = {bm_single_d_array_multithreaded_t1, bm_single_d_array_multithreaded_t1};
 std::vector<uint8_t> cpus = {1,2}; // 0-indexed
 uint32_t iterations = 10;
 
@@ -175,7 +176,7 @@ int main(int argc, char *argv[]) {
         t->args.iterations = iterations;
         t->args.cpu_msr = cpu_msr[i];
         t->args.id = i;
-        t->t = new std::thread(func, std::ref(t->args));
+        t->t = new std::thread(func[i], std::ref(t->args));
         pin_thread(t->t->native_handle(), cpus[i]);
         threads.push_back(std::move(t));
     }
@@ -186,7 +187,7 @@ int main(int argc, char *argv[]) {
     std::string filepath = log_dir + "/" + label + ".csv";
     FILE *f = fopen(filepath.c_str(), "w");
     if (f) {
-        fprintf(f, "TID");
+        fprintf(f, "TID\tTIME");
         uint8_t i = 0;
         do {
             fprintf(f, "\t%s", counter_tbl[i].name);
@@ -199,7 +200,7 @@ int main(int argc, char *argv[]) {
     for (unsigned int i = 0; i < threads.size(); ++i) {
         threads[i]->t->join();
         for (uint64_t j = 0; j < threads[i]->args.counts; ++j) {
-            fprintf(f, "%u", i);
+            fprintf(f, "%u\t%lu", i, threads[i]->args.times[j]);
             uint8_t c = 0;
             do {
                 fprintf(f, "\t%lu", threads[i]->args.values(c, j));

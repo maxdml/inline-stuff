@@ -1,6 +1,8 @@
 #include <thread>
 
 #include <fcntl.h>
+#include <vector>
+#include <time.h>
 #include "msr.hh"
 
 #define N_FIXED_CTR 0
@@ -106,12 +108,12 @@ class MultiArray {
 
 struct ThreadArgs {
     uint32_t iterations = 0;
-
     uint32_t id;
 
     /* Profiling */
     MultiArray<uint64_t, N_CUSTOM_CTR + N_FIXED_CTR, MAX_PTS> values;
     uint64_t counts = 0;
+    std::vector<uint64_t> times;
     MsrHandle *cpu_msr = nullptr;
 };
 
@@ -141,7 +143,10 @@ static inline void read_values(MsrHandle *cpu_msr, uint64_t *store) {
 /***********************
  * Benchmark functions *
  ***********************/
-void bm_single_d_array_multithreaded(struct ThreadArgs &args);
+void bm_single_d_array_multithreaded_t1(struct ThreadArgs &args);
+void bm_single_d_array_multithreaded_t2(struct ThreadArgs &args);
+void bm_single_d_array_multithreaded_t3(struct ThreadArgs &args);
+void bm_single_d_array_multithreaded_t4(struct ThreadArgs &args);
 void bm_cache_line_test(struct ThreadArgs &args);
 void bm_single_d_array(struct ThreadArgs &args);
 void bm_2d_array(struct ThreadArgs &args);
