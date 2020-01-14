@@ -1,0 +1,19 @@
+Test on L2 cache on DeDos 6
+L2 chace size : 256KB
+Used a single dimensional array of (L2_SIZE / sizeof(uint64_t)) / 2) elements of data type uint64_t.
+2 threads - 1 runs on core 1, another on core 2
+
+Experiment - Core 1 reads the array 9 times, overwrite it entirely once. Core 2 reads it 10 times.
+
+Analysis:
+L2_refs - This indicates no of times L2 is referenced. As expected, it is around 2k for every iteration of each thread. 
+Explanation - No. of elements is (256K/8)/2 which is 16384 elements. Cache line is 64 B in size. So, each cache line contains 64/8 = 8 elements. So, no of times L2 has to be referenced to access all the elements is 16384 / 8 = 2048.
+
+L2_misses - Core 1 and core 2 suffer miss on the elements in their first iteration. On 10th iteration, only core 1 suffers miss because it has elements in shared state but now it wants to write to these elements so it has to make a request to access elements in M state and invalidate elements in the other core. 
+Core 2 doesn't face any more misses after first iteration because it completes all its 10 iterations before core 1 writes to array.
+
+RFO hits - No RFO hits for core 2 because it doesn't do any write operations. Core 1 also doesn't have any RFO hits because it writes only once to the array.
+
+RFO misses /offcore RFO - No RFO misses/offcore RFO  for core 2 because of the above reason. Core 1 faces 1 RFO miss/Offcore RFO for the last iteration when it wants to write to the array.
+
+L3_refs - No of L3 refs are the same as L2 misses, as expected. 
