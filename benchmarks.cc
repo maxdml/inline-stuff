@@ -33,17 +33,18 @@ void bm_single_d_array_multithreaded_t1(struct ThreadArgs &args)
         shared_array = static_cast<uint64_t*>(malloc(n * sizeof(uint64_t)));
         for (uint64_t i = 0; i < n; ++i)
             shared_array[i] = i;
-    
     }
         clear_l1();
         clear_l2();
 
+        printf("thread id : %d\n", args.id);
+
     /** Let the other array run completely first */
-    //if (args.id == 1)
-    //{
-    //    while (!can_run)
-    //        ;
-    //}
+    if (args.id == 1)
+    {
+        while (!can_run)
+            ;
+    }
     unsigned int j, j_last;
     struct timeval tv;
 
@@ -92,10 +93,10 @@ void bm_single_d_array_multithreaded_t1(struct ThreadArgs &args)
         args.counts++;
     }
 
-    //if (args.id == 0)
-    //{
-    //    can_run = true;
-    //}
+    if (args.id == 0)
+    {
+        can_run = true;
+    }
     free(store_start);
     free(store_end);
 }
