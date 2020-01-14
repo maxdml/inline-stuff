@@ -1,0 +1,13 @@
+Test on L2 cache on DeDos 6
+L2 chace size : 256KB
+Used a single dimensional array of (L2_SIZE / sizeof(uint64_t)) / 2) elements of data type uint64_t.
+2 threads - 1 runs on core 1, another on core 2
+
+Experiment - Core 1 reads the array 5 times, overwrite it entirely once, then reads 5 more times. Core 2 reads it 10 times.
+
+Analysis:
+L2_refs - This indicates no of times L2 is referenced. As expected, it is around 2k for every iteration of each thread. 
+Explanation - No. of elements is (256K/8)/2 which is 16384 elements. Cache line is 64 B in size. So, each cache line contains 64/8 = 8 elements. So, no of times L2 has to be referenced to access all the elements is 16384 / 8 = 2048.
+
+L2_misses - Both the cores suffer miss for all the elements (2048 misses) for their very first iteration. After that, core 1 and core 2 read the elements in shared mode till the fifth iteration of core 1. After 5th iteration, core 1 needs to write all the elements once. So, all the elements are accessed in Modified state for this iteration. After this, when core 2 needs to access elements, it misses all of them because its entries are invalidated when core 1 accesses elements in Modified state. That's why for core 2, there are 2 times that it misses all 2048 times. 
+Similaryly core 1 shows this miss twice; once when it is reading the array for the first iteration in shared mode and second when it wants to write the array. This is because for writing, it needs to access the elements in Modified state, so it has to invalidate the other core which has those elements in shared state.
